@@ -44,57 +44,62 @@ retakeButton.addEventListener('click', () => {
     statusContainer.classList.add('hidden');
 });
 
-scanButton.addEventListener('click', async () => {
+scanButton.addEventListener('click', () => {
     scanButton.disabled = true;
     retakeButton.disabled = true;
     resultsDiv.innerHTML = '';
     statusContainer.classList.remove('hidden');
     progressBar.style.width = '0%';
     
-    try {
-        statusMessage.textContent = 'Scanning for English...';
-        const engResult = await Tesseract.recognize(canvas, 'eng');
-        progressBar.style.width = '50%';
-        
-        statusMessage.textContent = 'Scanning for Japanese...';
-        const jpnResult = await Tesseract.recognize(canvas, 'jpn');
-        progressBar.style.width = '100%';
+    // We will scan for both English and Japanese by default
+    const languages = 'eng+jpn';
 
-        // Combine text from both scans
-        const combinedText = `${engResult.data.text} ${jpnResult.data.text}`;
-        
-        analyzeIngredients(combinedText);
-
-    } catch (err) {
+    Tesseract.recognize(
+        canvas,
+        languages,
+        { logger: m => {
+            statusMessage.textContent = `${m.status.replace(/_/g, ' ')}...`;
+            if (m.status === 'recognizing text') {
+                progressBar.style.width = `${m.progress * 100}%`;
+            }
+        }}
+    ).then(({ data: { text } }) => {
+        analyzeIngredients(text);
+    }).catch(err => {
         console.error(err);
         resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>Could not read the text. Please try again with a clearer image.</p></div>`;
-    } finally {
+    }).finally(() => {
         scanButton.disabled = false;
         retakeButton.disabled = false;
         statusContainer.classList.add('hidden');
-    }
+    });
 });
 
-// --- 3. Analyze the Ingredients ---
+// --- 3. Analyze the Ingredients (CORRECTED LOGIC) ---
 async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
     
-    // Improved cleaning: handles multiple lines and extra spaces
+    // THIS IS THE CRITICAL CLEANING STEP, NOW CORRECTED
     const ingredientsFromImage = text
         .toLowerCase()
-        .replace(/[^a-z0-9\s]/gi, ' ') // Remove all non-alphanumeric chars
-        .split(/\s+/) // Split by any amount of whitespace
-        .filter(word => word.length > 1); // Remove empty strings and single letters
+        .replace(/[^a-z\s]/gi, ' ') // Keep only letters and spaces
+        .split(/\s+/) // Split by one or more spaces
+        .filter(word => word.length > 2); // Only keep words longer than 2 letters
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
     const allHaram = [...db.haram_en, ...db.haram_jp];
     const allMushbooh = [...db.mushbooh_en, ...db.mushbooh_jp];
     
+    // THIS LOOP CHECKS EACH CLEANED WORD
     ingredientsFromImage.forEach(ingredient => {
-        if (allHaram.includes(ingredient)) { foundHaram.add(ingredient); }
-        if (allMushbooh.includes(ingredient)) { foundMushbooh.add(ingredient); }
+        if (allHaram.includes(ingredient)) {
+            foundHaram.add(ingredient);
+        }
+        if (allMushbooh.includes(ingredient)) {
+            foundMushbooh.add(ingredient);
+        }
     });
 
     let html = '';
