@@ -7,6 +7,10 @@ const scanButton = document.getElementById('scanButton');
 const retakeButton = document.getElementById('retakeButton');
 const actionsContainer = document.getElementById('actions-container');
 const context = canvas.getContext('2d');
+// NEW elements for the progress bar
+const statusContainer = document.getElementById('status-container');
+const statusMessage = document.getElementById('status-message');
+const progressBar = document.getElementById('progress-bar');
 
 // --- 1. Start the Camera ---
 navigator.mediaDevices.getUserMedia({ 
@@ -28,10 +32,8 @@ captureButton.addEventListener('click', () => {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
     video.classList.add('hidden');
     canvas.classList.remove('hidden');
-    
     captureButton.classList.add('hidden');
     actionsContainer.classList.remove('hidden');
 });
@@ -40,42 +42,50 @@ captureButton.addEventListener('click', () => {
 retakeButton.addEventListener('click', () => {
     canvas.classList.add('hidden');
     video.classList.remove('hidden');
-    
     actionsContainer.classList.add('hidden');
     captureButton.classList.remove('hidden');
     resultsDiv.innerHTML = '';
+    statusContainer.classList.add('hidden'); // Hide status on retake
 });
 
 // When "Scan This Image" is clicked
 scanButton.addEventListener('click', () => {
-    // Disable both buttons to prevent issues
+    // Disable both buttons during scan
     scanButton.disabled = true;
     retakeButton.disabled = true;
-    scanButton.textContent = 'SCANNING...';
-    
-    // Show a processing message immediately
-    resultsDiv.innerHTML = `<div class="result-box processing"><h2>Scanning Image...</h2><p>This may take a moment. Please wait.</p></div>`;
-    resultsDiv.scrollIntoView({ behavior: 'smooth' });
+    resultsDiv.innerHTML = '';
 
-    // Tell Tesseract to look for English AND Japanese
+    // Show and reset the progress bar
+    statusContainer.classList.remove('hidden');
+    progressBar.style.width = '0%';
+    
+    const selectedLanguage = document.querySelector('input[name="language"]:checked').value;
+
     Tesseract.recognize(
         canvas,
-        'eng+jpn', // Automatic language detection!
-        { logger: m => console.log(m) }
+        selectedLanguage,
+        // THIS IS THE UPDATED LOGGER
+        { logger: m => {
+            // Update the status message and progress bar
+            statusMessage.textContent = `${m.status.replace(/_/g, ' ')}...`;
+            if (m.status === 'recognizing text') {
+                progressBar.style.width = `${m.progress * 100}%`;
+            }
+        }}
     ).then(({ data: { text } }) => {
         analyzeIngredients(text);
     }).catch(err => {
         console.error(err);
-        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>Could not read the text. Please try again with a clearer, well-lit image.</p></div>`;
+        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>Could not read the text. Please try again with a clearer image.</p></div>`;
     }).finally(() => {
-        // This ALWAYS runs, ensuring the buttons are never stuck
+        // Re-enable the buttons and hide the progress bar
         scanButton.disabled = false;
         retakeButton.disabled = false;
-        scanButton.textContent = 'Scan This Image';
+        statusContainer.classList.add('hidden');
     });
 });
 
-// --- 3. Analyze the Ingredients ---
+// --- 3. Analyze the Ingredients (No changes) ---
 async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();

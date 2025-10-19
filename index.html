@@ -14,12 +14,24 @@
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas" class="hidden"></canvas>
     </div>
+    
+    <div id="language-selector">
+        <label><input type="radio" name="language" value="eng" checked> English</label>
+        <label><input type="radio" name="language" value="jpn"> 日本語 (Japanese)</label>
+    </div>
 
     <button id="captureButton">Capture Image</button>
 
     <div id="actions-container" class="hidden">
         <button id="scanButton">Scan This Image</button>
         <button id="retakeButton">Retake</button>
+    </div>
+    
+    <div id="status-container" class="hidden">
+        <p id="status-message">Initializing...</p>
+        <div class="progress-bar-container">
+            <div id="progress-bar"></div>
+        </div>
     </div>
     
     <div id="results">
