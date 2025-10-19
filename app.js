@@ -25,7 +25,6 @@ navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
 
 // --- 2. WORKFLOW ---
 
-// When "Capture Image" is clicked
 captureButton.addEventListener('click', () => {
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
@@ -37,31 +36,26 @@ captureButton.addEventListener('click', () => {
     cropper = new Cropper(imageToCrop, { viewMode: 1, dragMode: 'move', background: false, autoCropArea: 0.8 });
 });
 
-// Add event listeners for the two new scan buttons
 scanJpnButton.addEventListener('click', () => performScan('jpn'));
 scanEngButton.addEventListener('click', () => performScan('eng'));
 
-// When "Cancel" in the cropper is clicked
 cancelCropButton.addEventListener('click', () => {
     cropperModal.classList.add('hidden');
     mainContent.classList.remove('hidden');
     cropper.destroy();
 });
 
-// The main scanning function
 function performScan(language) {
     cropperModal.classList.add('hidden');
     mainContent.classList.remove('hidden');
     resultsDiv.innerHTML = '';
     statusContainer.classList.remove('hidden');
     progressBar.style.width = '0%';
-    
     const croppedCanvas = cropper.getCroppedCanvas();
     cropper.destroy();
-
     Tesseract.recognize(
         croppedCanvas,
-        language, // Use the language passed to the function
+        language,
         { logger: m => {
             statusMessage.textContent = `${m.status.replace(/_/g, ' ')}...`;
             if (m.status === 'recognizing text') { progressBar.style.width = `${m.progress * 100}%`; }
@@ -76,30 +70,49 @@ function performScan(language) {
     });
 }
 
-// --- 3. Analyze the Ingredients ---
+// --- 3. Analyze the Ingredients (CORRECTED) ---
 async function analyzeIngredients(text) {
-    const response = await fetch('database.json');
-    const db = await response.json();
-    const ingredientsFromImage = text.toLowerCase().replace(/[,.()\[\]{}・「」、。]/g, ' ').split(/\s+/);
-    let foundHaram = new Set();
-    let foundMushbooh = new Set();
-    const allHaram = [...db.haram_en, ...db.haram_jp];
-    const allMushbooh = [...db.mushbooh_en, ...db.mushbooh_jp];
-    ingredientsFromImage.forEach(ingredient => {
-        if (allHaram.includes(ingredient)) { foundHaram.add(ingredient); }
-        if (allMushbooh.includes(ingredient)) { foundMushbooh.add(ingredient); }
-    });
-    let resultHTML = '';
-    if (foundHaram.size > 0) {
-        resultHTML = `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p><h3>Haram Ingredients:</h3><p class="ingredient-list">${[...foundHaram].join(', ')}</p>`;
-        if (foundMushbooh.size > 0) { resultHTML += `<h3>Doubtful Ingredients Also Found:</h3><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p>`; }
-    } else if (foundMushbooh.size > 0) {
-        resultHTML = `<div class="result-box mushbooh"><h2>🟡 Doubtful (Mushbooh)</h2><p>This product is Doubtful. The source of the following ingredients should be verified:</p><h3>Doubtful Ingredients:</h3><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p>`;
-    } else {
-        resultHTML = `<div class="result-box halal"><h2>✅ Halal</h2><p>Based on our database, no Haram or Doubtful ingredients were detected in the scanned text.</p>`;
+    try {
+        const response = await fetch('database.json');
+        const db = await response.json();
+        const ingredientsFromImage = text.toLowerCase().replace(/[,.()\[\]{}・「」、。]/g, ' ').split(/\s+/);
+        let foundHaram = new Set();
+        let foundMushbooh = new Set();
+        const allHaram = [...db.haram_en, ...db.haram_jp];
+        const allMushbooh = [...db.mushbooh_en, ...db.mushbooh_jp];
+        ingredientsFromImage.forEach(ingredient => {
+            if (allHaram.includes(ingredient)) { foundHaram.add(ingredient); }
+            if (allMushbooh.includes(ingredient)) { foundMushbooh.add(ingredient); }
+        });
+        
+        let resultCard = '';
+        
+        if (foundHaram.size > 0) {
+            resultCard = `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p><h3>Haram Ingredients:</h3><p class="ingredient-list">${[...foundHaram].join(', ')}</p>`;
+            if (foundMushbooh.size > 0) { resultCard += `<h3>Doubtful Ingredients Also Found:</h3><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p>`; }
+        } else if (foundMushbooh.size > 0) {
+            resultCard = `<div class="result-box mushbooh"><h2>🟡 Doubtful (Mushbooh)</h2><p>This product is Doubtful. The source of the following ingredients should be verified:</p><h3>Doubtful Ingredients:</h3><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p>`;
+        } else {
+            resultCard = `<div class="result-box halal"><h2>✅ Halal</h2><p>Based on our database, no Haram or Doubtful ingredients were detected in the scanned text.</p>`;
+        }
+
+        // THIS IS THE CORRECTED PART. We add the raw text and close the div properly.
+        const rawTextBox = `
+            <div class="raw-text-container">
+                <h4>Raw Text Recognized:</h4>
+                <p>${text.trim() || 'No text could be recognized. Try a clearer image.'}</p>
+            </div>
+        `;
+        
+        // Combine the card, the raw text, and the closing tag
+        let finalHTML = resultCard + rawTextBox + '</div>' + 
+                        '<p class="disclaimer">Disclaimer: This tool is for guidance only and is not a substitute for official Halal certification. OCR accuracy may vary.</p>';
+        
+        resultsDiv.innerHTML = finalHTML;
+        resultsDiv.scrollIntoView({ behavior: 'smooth' });
+
+    } catch (error) {
+        console.error("Error analyzing ingredients:", error);
+        resultsDiv.innerHTML = `<div class="result-box error"><h2>Analysis Failed</h2><p>An error occurred while analyzing the ingredients.</p></div>`;
     }
-    resultHTML += `<div class="raw-text-container"><h4>Raw Text Recognized:</h4><p>${text.trim() || 'No text could be recognized. Try a clearer image.'}</p></div></div>`;
-    let finalHTML = resultHTML + '<p class="disclaimer">Disclaimer: This tool is for guidance only and is not a substitute for official Halal certification. OCR accuracy may vary.</p>';
-    resultsDiv.innerHTML = finalHTML;
-    resultsDiv.scrollIntoView({ behavior: 'smooth' });
 }
