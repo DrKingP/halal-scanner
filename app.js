@@ -89,7 +89,7 @@ async function analyzeIngredients(text) {
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
 
     const qualityCheck = (text.match(/[^a-zA-Z0-9\s\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF]/g) || []).length;
-    if ((text.length > 0 && qualityCheck / text.length > 0.35) || text.trim() === '') {
+    if ((text.length > 0 && qualityCheck / text.length > 0.4) || text.trim() === '') {
         resultsDiv.innerHTML = `<div class="result-box error"><h2>Poor Scan Quality</h2><p>The text could not be read clearly. Please try again with a better lit, non-reflective, and focused photo.</p></div>`;
         resultsDiv.scrollIntoView({ behavior: 'smooth' });
         return;
@@ -98,8 +98,8 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
 
-    // Create one single, clean string to search within. No spaces, no punctuation.
-    const searchableText = text.toLowerCase().replace(/[.,()（）\[\]{}・「」、。\s]/g, '');
+    // Create a single, clean string with no spaces or punctuation to search within.
+    const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
@@ -108,11 +108,11 @@ async function analyzeIngredients(text) {
     const findMatches = (list, resultSet) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
-                // Create a clean version of the alias to search for
-                const cleanedAlias = alias.toLowerCase().replace(/[.,()（）\[\]{}・「」、。\s]/g, '');
+                // Create a clean version of the alias, removing all spaces and punctuation
+                const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                 
-                // If the main text contains the cleaned alias, we have a match
-                if (searchableText.includes(cleanedAlias)) {
+                // If the main text string contains the cleaned alias string, we have a match
+                if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
                     resultSet.add(ingredient.name);
                     break; // Move to the next ingredient group once a match is found
                 }
