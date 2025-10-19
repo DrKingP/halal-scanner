@@ -83,7 +83,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL UPGRADED LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL, MOST ROBUST LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -97,41 +97,50 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
 
-    // Prepare two versions of the text for robust searching
-    const textWithSpaces = text.toLowerCase().replace(/[.,()（）\[\]{}・「」、。]/g, ' ').replace(/\s+/g, ' ').trim();
-    const textWithoutSpaces = textWithSpaces.replace(/\s+/g, '');
+    // Prepare a clean version of the scanned text for searching
+    const searchableText = text.toLowerCase().replace(/[.,()（）\[\]{}・「」、。]/g, ' ').replace(/\s+/g, ' ').trim();
+    const searchableTextNoSpaces = searchableText.replace(/\s+/g, '');
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
     
-    // This function is now much smarter
+    // This new search function is much smarter
     const findMatches = (list, resultSet) => {
         list.forEach(item => {
             const itemLower = item.toLowerCase();
-            const itemWithoutSpace = itemLower.replace(/\s+/g, '');
+            const itemWithoutSpaces = itemLower.replace(/\s+/g, '');
             
-            // Check for a match in both versions of the text
-            if (textWithSpaces.includes(itemLower) || textWithoutSpaces.includes(itemWithoutSpace)) {
-                resultSet.add(item); // Add the original item, not the lowercase version
+            // Check if the item (with or without spaces) exists in the scanned text
+            if (searchableText.includes(itemLower) || (itemWithoutSpaces.length > 2 && searchableTextNoSpaces.includes(itemWithoutSpaces))) {
+                resultSet.add(item);
             }
         });
     };
 
+    // Find all potential matches
     findMatches([...db.haram_en, ...db.haram_jp], foundHaram);
     findMatches([...db.mushbooh_en, ...db.mushbooh_jp], foundMushbooh);
     
-    // Clean up any overlaps (e.g., if a haram item was also in mushbooh)
+    // Ensure that if an item is Haram, it is not also listed as Mushbooh
     foundHaram.forEach(item => foundMushbooh.delete(item));
 
+    // Build the final result HTML
     let html = '';
     if (foundHaram.size > 0) {
-        html = `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p><h3>Haram Ingredients:</h3><p class="ingredient-list">${[...foundHaram].join(', ')}</p></div>`;
-        if (foundMushbooh.size > 0) {
-            html += `<h3>Doubtful Ingredients Also Found:</h3><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p>`;
+        html += `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p><h3>Haram Ingredients:</h3><p class="ingredient-list">${[...foundHaram].join(', ')}</p></div>`;
+    }
+    
+    if (foundMushbooh.size > 0) {
+        // If Haram items were also found, add a separate section for Mushbooh items
+        if (foundHaram.size > 0) {
+            html += `<div class="result-box mushbooh" style="margin-top: 15px;"><h3>🟡 Doubtful Ingredients Also Found:</h3><p>The source of the following ingredients should be verified:</p><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p></div>`;
+        } else {
+            // Otherwise, show the main Mushbooh result
+            html = `<div class="result-box mushbooh"><h2>🟡 Doubtful (Mushbooh)</h2><p>This product is Doubtful. The source of the following ingredients should be verified:</p><h3>Doubtful Ingredients:</h3><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p></div>`;
         }
-    } else if (foundMushbooh.size > 0) {
-        html = `<div class="result-box mushbooh"><h2>🟡 Doubtful (Mushbooh)</h2><p>This product is Doubtful. The source of the following ingredients should be verified:</p><h3>Doubtful Ingredients:</h3><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p></div>`;
-    } else {
+    }
+
+    if (html === '') {
         html = `<div class="result-box halal"><h2>✅ Halal</h2><p>Based on our database, no Haram or Doubtful ingredients were detected.</p></div>`;
     }
 
