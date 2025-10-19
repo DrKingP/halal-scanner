@@ -11,48 +11,94 @@ h1 {
     color: #006400; /* Dark Green */
 }
 
+/* This container will hold both the video and the canvas */
 #scanner-container {
+    position: relative;
     width: 90%;
     max-width: 500px;
     margin: 20px auto;
     border: 3px solid #ccc;
     border-radius: 8px;
-    overflow: hidden; /* Hides parts of the video that go outside the box */
+    overflow: hidden;
 }
 
-#video {
+#video, #canvas {
     width: 100%;
     display: block;
 }
 
-#scanButton {
-    display: block;
-    width: 90%;
-    max-width: 500px;
+#language-selector {
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+#language-selector label {
+    margin: 0 15px;
+}
+
+/* General style for all our main buttons */
+#captureButton, #scanButton, #retakeButton {
+    display: inline-block;
+    width: 44%;
+    max-width: 240px;
     padding: 15px;
     font-size: 18px;
     font-weight: bold;
     color: white;
-    background-color: #28a745; /* Green */
     border: none;
     border-radius: 8px;
-    margin: 0 auto 20px auto;
+    margin: 5px;
     cursor: pointer;
 }
 
-#scanButton:active {
-    background-color: #218838; /* Darker Green */
+/* Specific color for the main capture/scan button */
+#captureButton, #scanButton {
+    background-color: #28a745; /* Green */
+}
+#captureButton:active, #scanButton:active {
+    background-color: #218838;
+}
+
+/* Capture button should be full width when it's the only one visible */
+#captureButton {
+    width: 90%;
+}
+
+/* Specific color for the retake button */
+#retakeButton {
+    background-color: #6c757d; /* Grey */
+}
+#retakeButton:active {
+    background-color: #5a6268;
+}
+
+/* A class to hide/show elements */
+.hidden {
+    display: none !important;
 }
 
 #results {
     width: 90%;
     max-width: 500px;
-    margin: 0 auto;
-    padding: 10px;
-    border-radius: 8px;
+    margin: 20px auto 0 auto;
     text-align: left;
 }
 
-.haram { background-color: #ffdddd; border: 1px solid #ff8888; }
-.mushbooh { background-color: #fffbdd; border: 1px solid #ffcc00; }
-.halal { background-color: #ddffdd; border: 1px solid #88ff88; }
+.result-box {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+.result-box h2 { margin-top: 0; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 10px; }
+.result-box h3 { margin-bottom: 5px; }
+.ingredient-list { font-weight: bold; word-wrap: break-word; }
+.haram { background-color: #ffdddd; border: 1px solid #d8000c; }
+.mushbooh { background-color: #fffbdd; border: 1px solid #9f6000; }
+.halal { background-color: #ddffdd; border: 1px solid #4f8a10; }
+.error { background-color: #ffdddd; border: 1px solid #d8000c; } /* Error message style */
+
+.disclaimer {
+    font-size: 12px;
+    color: grey;
+    margin-top: 15px;
+}
