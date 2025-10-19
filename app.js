@@ -83,7 +83,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL, LANGUAGE-AGNOSTIC LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL, BULLETPROOF LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -98,7 +98,8 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
 
-    const searchableText = text.toLowerCase().replace(/[.,()（）\[\]{}・「」、。]/g, ' ').replace(/\s+/g, ' ').trim();
+    // Create one single, clean string to search within. No spaces, no punctuation.
+    const searchableText = text.toLowerCase().replace(/[.,()（）\[\]{}・「」、。\s]/g, '');
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
@@ -107,13 +108,13 @@ async function analyzeIngredients(text) {
     const findMatches = (list, resultSet) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
-                // Clean the alias in the same way as the main text
-                const cleanedAlias = alias.toLowerCase().replace(/[.,()（）\[\]{}・「」、。]/g, ' ').replace(/\s+/g, ' ').trim();
-                // Create a regex to find this phrase. We remove the problematic '\b' word boundary.
-                const regex = new RegExp(cleanedAlias.replace(/ /g, '\\s+'), 'i');
-                if (regex.test(searchableText)) {
+                // Create a clean version of the alias to search for
+                const cleanedAlias = alias.toLowerCase().replace(/[.,()（）\[\]{}・「」、。\s]/g, '');
+                
+                // If the main text contains the cleaned alias, we have a match
+                if (searchableText.includes(cleanedAlias)) {
                     resultSet.add(ingredient.name);
-                    break;
+                    break; // Move to the next ingredient group once a match is found
                 }
             }
         });
