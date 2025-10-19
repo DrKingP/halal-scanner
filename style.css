@@ -99,3 +99,11 @@ h1 {
 }
 
 .disclaimer { font-size: 12px; color: grey; margin-top: 15px; }
+
+/* Media query for mobile devices */
+@media (max-width: 600px) {
+  #scanner-container {
+    /* Limit the height to 40% of the screen's vertical height */
+    max-height: 40vh;
+  }
+}
