@@ -83,13 +83,13 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL, MOST ROBUST LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL, LANGUAGE-AGNOSTIC LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
 
     const qualityCheck = (text.match(/[^a-zA-Z0-9\s\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF]/g) || []).length;
-    if ((text.length > 0 && qualityCheck / text.length > 0.3) || text.trim() === '') {
+    if ((text.length > 0 && qualityCheck / text.length > 0.35) || text.trim() === '') {
         resultsDiv.innerHTML = `<div class="result-box error"><h2>Poor Scan Quality</h2><p>The text could not be read clearly. Please try again with a better lit, non-reflective, and focused photo.</p></div>`;
         resultsDiv.scrollIntoView({ behavior: 'smooth' });
         return;
@@ -109,8 +109,8 @@ async function analyzeIngredients(text) {
             for (const alias of ingredient.aliases) {
                 // Clean the alias in the same way as the main text
                 const cleanedAlias = alias.toLowerCase().replace(/[.,()（）\[\]{}・「」、。]/g, ' ').replace(/\s+/g, ' ').trim();
-                // Create a regex to find this cleaned alias as a whole phrase
-                const regex = new RegExp(`\\b${cleanedAlias.replace(/ /g, '\\s+')}\\b`, 'i');
+                // Create a regex to find this phrase. We remove the problematic '\b' word boundary.
+                const regex = new RegExp(cleanedAlias.replace(/ /g, '\\s+'), 'i');
                 if (regex.test(searchableText)) {
                     resultSet.add(ingredient.name);
                     break;
