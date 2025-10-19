@@ -96,10 +96,15 @@ scanButton.addEventListener('click', () => {
     formData.append('language', 'jpn');
     formData.append('isOverlayRequired', false);
 
-    fetch('https://api.ocr.space/parse/image', {
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out')), 20000); // 20 seconds
+    });
+    const fetchPromise = fetch('https://api.ocr.space/parse/image', {
         method: 'POST',
         body: formData
-    })
+    });
+
+    Promise.race([fetchPromise, timeoutPromise])
     .then(response => response.json())
     .then(data => {
         statusMessage.textContent = 'Analyzing text...';
@@ -109,7 +114,11 @@ scanButton.addEventListener('click', () => {
     })
     .catch(err => {
         console.error(err);
-        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>Could not connect to the OCR server. Please check your connection and API key.</p></div>`;
+        let errorMessage = 'Could not connect to the OCR server. Please check your connection and API key.';
+        if (err.message === 'Request timed out') {
+            errorMessage = 'The server is taking too long to respond. Please try again.';
+        }
+        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>${errorMessage}</p></div>`;
     })
     .finally(() => {
         scanButton.disabled = false;
@@ -118,7 +127,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL LOGIC - SHOWS SPECIFIC ITEMS) ---
+// --- 3. Analyze the Ingredients (FINAL LOGIC - GROUPED RESULTS) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -135,16 +144,20 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    let foundHaram = new Set();
-    let foundMushbooh = new Set();
+    // These will now store data like: { "Category Name": Set{"item1", "item2"} }
+    let foundHaram = {};
+    let foundMushbooh = {};
     
-    // This function now adds the specific alias found, not the category name
-    const findMatches = (list, resultSet) => {
+    // This function now groups the found aliases by their category name
+    const findMatches = (list, resultMap) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                 if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
-                    resultSet.add(alias); // Add the specific alias that was matched
+                    if (!resultMap[ingredient.name]) {
+                        resultMap[ingredient.name] = new Set();
+                    }
+                    resultMap[ingredient.name].add(alias);
                 }
             }
         });
@@ -153,18 +166,32 @@ async function analyzeIngredients(text) {
     findMatches(db.haram, foundHaram);
     findMatches(db.mushbooh, foundMushbooh);
     
-    // Clean up overlaps: if an alias is in both lists, keep it only in Haram
-    foundHaram.forEach(item => foundMushbooh.delete(item));
+    // Ensure that if a category is in Haram, it's not also in Mushbooh
+    for (const category in foundHaram) {
+        delete foundMushbooh[category];
+    }
+
+    // Function to generate the list HTML
+    const generateListHtml = (resultMap) => {
+        let listHtml = '';
+        for (const category in resultMap) {
+            listHtml += `<div class="category-group"><h4>${category}:</h4><p class="ingredient-list">${[...resultMap[category]].join(', ')}</p></div>`;
+        }
+        return listHtml;
+    };
 
     let html = '';
-    if (foundHaram.size > 0) {
-        html += `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p><h3>Haram Ingredients:</h3><p class="ingredient-list">${[...foundHaram].join(', ')}</p></div>`;
+    const haramCategories = Object.keys(foundHaram);
+    const mushboohCategories = Object.keys(foundMushbooh);
+
+    if (haramCategories.length > 0) {
+        html += `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p>${generateListHtml(foundHaram)}</div>`;
     }
     
-    if (foundMushbooh.size > 0) {
-        const marginTop = foundHaram.size > 0 ? 'style="margin-top: 15px;"' : '';
-        const title = foundHaram.size > 0 ? '<h3>🟡 Doubtful Ingredients Also Found:</h3>' : '<h2>🟡 Doubtful (Mushbooh)</h2>';
-        html += `<div class="result-box mushbooh" ${marginTop}>${title}<p>The source of the following ingredients should be verified:</p><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p></div>`;
+    if (mushboohCategories.length > 0) {
+        const marginTop = haramCategories.length > 0 ? 'style="margin-top: 15px;"' : '';
+        const title = haramCategories.length > 0 ? '<h3>🟡 Doubtful Ingredients Also Found:</h3>' : '<h2>🟡 Doubtful (Mushbooh)</h2>';
+        html += `<div class="result-box mushbooh" ${marginTop}>${title}<p>The source of the following ingredients should be verified:</p>${generateListHtml(foundMushbooh)}</div>`;
     }
 
     if (html === '') {
