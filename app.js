@@ -83,13 +83,16 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL, PROFESSIONAL LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL LOGIC WITH QUALITY CHECK) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
 
-    if (!text || text.trim() === '') {
-        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>No text could be detected in the image.</p></div>`;
+    // --- NEW QUALITY CHECK ---
+    // A simple check: if the text contains many strange characters, it's likely a bad scan.
+    const qualityCheck = (text.match(/[^a-zA-Z0-9\s\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF]/g) || []).length;
+    if ((text.length > 0 && qualityCheck / text.length > 0.3) || text.trim() === '') {
+        resultsDiv.innerHTML = `<div class="result-box error"><h2>Poor Scan Quality</h2><p>The text could not be read clearly. Please try again with a better lit, non-reflective, and focused photo.</p></div>`;
         resultsDiv.scrollIntoView({ behavior: 'smooth' });
         return;
     }
@@ -98,16 +101,12 @@ async function analyzeIngredients(text) {
     const db = await response.json();
 
     const searchableText = text.toLowerCase();
-
     let foundHaram = new Set();
     let foundMushbooh = new Set();
     
-    // This new function uses Regular Expressions for accurate, whole-word matching
     const findMatches = (list, resultSet) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
-                // Create a regular expression to find the alias as a whole word
-                // This prevents matching 'fat' inside 'nonfat'
                 const regex = new RegExp(`\\b${alias.toLowerCase().replace(/ /g, '\\s*')}\\b`, 'i');
                 if (regex.test(searchableText)) {
                     resultSet.add(ingredient.name);
@@ -122,7 +121,6 @@ async function analyzeIngredients(text) {
     
     foundHaram.forEach(item => foundMushbooh.delete(item));
 
-    // Build the final result HTML
     let html = '';
     if (foundHaram.size > 0) {
         html += `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p><h3>Haram Ingredients:</h3><p class="ingredient-list">${[...foundHaram].join(', ')}</p></div>`;
