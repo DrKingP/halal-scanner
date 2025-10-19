@@ -4,39 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Halal Ingredient Scanner</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Halal Ingredient Scanner</h1>
-    <p>Point your camera at an ingredients list.</p>
-    
-    <div id="scanner-container">
-        <video id="video" autoplay playsinline></video>
-        <canvas id="canvas" class="hidden"></canvas>
-    </div>
-    
-    <div id="language-selector">
-        <label><input type="radio" name="language" value="eng" checked> English</label>
-        <label><input type="radio" name="language" value="jpn"> 日本語 (Japanese)</label>
-    </div>
-
-    <button id="captureButton">Capture Image</button>
-
-    <div id="actions-container" class="hidden">
-        <button id="scanButton">Scan This Image</button>
-        <button id="retakeButton">Retake</button>
-    </div>
-    
-    <div id="status-container" class="hidden">
-        <p id="status-message">Initializing...</p>
-        <div class="progress-bar-container">
-            <div id="progress-bar"></div>
+    <div id="main-content">
+        <h1>Halal Ingredient Scanner</h1>
+        <p>Point your camera at an ingredients list.</p>
+        
+        <div id="scanner-container">
+            <video id="video" autoplay playsinline></video>
         </div>
-    </div>
-    
-    <div id="results">
+        
+        <div id="language-selector">
+            <label><input type="radio" name="language" value="eng" checked> English</label>
+            <label><input type="radio" name="language" value="jpn"> 日本語 (Japanese)</label>
         </div>
 
+        <button id="captureButton">Capture Image</button>
+        
+        <div id="status-container" class="hidden">
+            <p id="status-message">Initializing...</p>
+            <div class="progress-bar-container">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <div id="cropper-modal" class="hidden">
+        <div id="cropper-container">
+            <img id="image-to-crop">
+        </div>
+        <div id="cropper-actions">
+            <button id="crop-and-scan-button">Crop & Scan</button>
+            <button id="cancel-crop-button">Cancel</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <script src="app.js"></script>
 </body>
