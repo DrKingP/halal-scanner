@@ -1,16 +1,18 @@
 // Get all the HTML elements we need
 const video = document.getElementById('video');
-const canvas = document.getElementById('canvas');
 const resultsDiv = document.getElementById('results');
 const captureButton = document.getElementById('captureButton');
-const scanButton = document.getElementById('scanButton');
-const retakeButton = document.getElementById('retakeButton');
-const actionsContainer = document.getElementById('actions-container');
-const context = canvas.getContext('2d');
-// NEW elements for the progress bar
+const mainContent = document.getElementById('main-content');
+// Cropper modal elements
+const cropperModal = document.getElementById('cropper-modal');
+const imageToCrop = document.getElementById('image-to-crop');
+const cropAndScanButton = document.getElementById('crop-and-scan-button');
+const cancelCropButton = document.getElementById('cancel-crop-button');
+// Status elements
 const statusContainer = document.getElementById('status-container');
 const statusMessage = document.getElementById('status-message');
 const progressBar = document.getElementById('progress-bar');
+let cropper;
 
 // --- 1. Start the Camera ---
 navigator.mediaDevices.getUserMedia({ 
@@ -29,44 +31,49 @@ navigator.mediaDevices.getUserMedia({
 
 // When "Capture Image" is clicked
 captureButton.addEventListener('click', () => {
+    const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    video.classList.add('hidden');
-    canvas.classList.remove('hidden');
-    captureButton.classList.add('hidden');
-    actionsContainer.classList.remove('hidden');
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    imageToCrop.src = canvas.toDataURL('image/jpeg');
+    
+    // Show the cropper modal and HIDE the main content
+    cropperModal.classList.remove('hidden');
+    mainContent.classList.add('hidden'); // This is the key line
+    
+    cropper = new Cropper(imageToCrop, {
+        viewMode: 1,
+        dragMode: 'move',
+        background: false,
+        autoCropArea: 0.8
+    });
 });
 
-// When "Retake" is clicked
-retakeButton.addEventListener('click', () => {
-    canvas.classList.add('hidden');
-    video.classList.remove('hidden');
-    actionsContainer.classList.add('hidden');
-    captureButton.classList.remove('hidden');
-    resultsDiv.innerHTML = '';
-    statusContainer.classList.add('hidden'); // Hide status on retake
+// When "Cancel" in the cropper is clicked
+cancelCropButton.addEventListener('click', () => {
+    // Hide the cropper modal and SHOW the main content
+    cropperModal.classList.add('hidden');
+    mainContent.classList.remove('hidden'); // This brings the camera back
+    cropper.destroy();
 });
 
-// When "Scan This Image" is clicked
-scanButton.addEventListener('click', () => {
-    // Disable both buttons during scan
-    scanButton.disabled = true;
-    retakeButton.disabled = true;
+// When "Crop & Scan" is clicked
+cropAndScanButton.addEventListener('click', () => {
+    // Hide the cropper modal and SHOW the main content
+    cropperModal.classList.add('hidden');
+    mainContent.classList.remove('hidden'); // This brings the main page back for results
     resultsDiv.innerHTML = '';
 
-    // Show and reset the progress bar
     statusContainer.classList.remove('hidden');
     progressBar.style.width = '0%';
-    
     const selectedLanguage = document.querySelector('input[name="language"]:checked').value;
+    const croppedCanvas = cropper.getCroppedCanvas();
+    cropper.destroy();
 
     Tesseract.recognize(
-        canvas,
+        croppedCanvas,
         selectedLanguage,
-        // THIS IS THE UPDATED LOGGER
         { logger: m => {
-            // Update the status message and progress bar
             statusMessage.textContent = `${m.status.replace(/_/g, ' ')}...`;
             if (m.status === 'recognizing text') {
                 progressBar.style.width = `${m.progress * 100}%`;
@@ -76,16 +83,13 @@ scanButton.addEventListener('click', () => {
         analyzeIngredients(text);
     }).catch(err => {
         console.error(err);
-        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>Could not read the text. Please try again with a clearer image.</p></div>`;
+        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>Could not read the text. Please try again.</p></div>`;
     }).finally(() => {
-        // Re-enable the buttons and hide the progress bar
-        scanButton.disabled = false;
-        retakeButton.disabled = false;
         statusContainer.classList.add('hidden');
     });
 });
 
-// --- 3. Analyze the Ingredients (No changes) ---
+// --- 3. Analyze the Ingredients (No changes needed here) ---
 async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
