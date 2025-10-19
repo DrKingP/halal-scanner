@@ -43,7 +43,7 @@ h1 {
     display: block;
 }
 
-#captureButton, #scanButton, #retakeButton {
+#captureButton, #uploadButton, #scanButton, #retakeButton {
     display: block;
     width: 100%;
     padding: 15px;
@@ -58,6 +58,11 @@ h1 {
 
 #captureButton, #scanButton { background-color: #28a745; }
 #captureButton:active, #scanButton:active { background-color: #218838; }
+
+/* Style for the new upload button */
+#uploadButton { background-color: #007bff; }
+#uploadButton:active { background-color: #0056b3; }
+
 #retakeButton { background-color: #6c757d; }
 #retakeButton:active { background-color: #5a6268; }
 
@@ -103,7 +108,6 @@ h1 {
 /* Media query for mobile devices */
 @media (max-width: 600px) {
   #scanner-container {
-    /* Limit the height to 40% of the screen's vertical height */
     max-height: 40vh;
   }
 }

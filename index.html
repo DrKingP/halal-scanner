@@ -27,13 +27,18 @@
         </div>
 
         <div class="right-column">
-            <button id="captureButton">Capture Image</button>
+            <div id="initial-buttons">
+                <button id="captureButton">Capture Image</button>
+                <button id="uploadButton">Upload from Gallery</button>
+            </div>
             <div id="actions-container" class="hidden">
                 <button id="scanButton">Scan This Image</button>
-                <button id="retakeButton">Retake</button>
+                <button id="retakeButton">Start Over</button>
             </div>
         </div>
     </div>
+    
+    <input type="file" id="uploadInput" class="hidden" accept="image/*">
 
     <script src="app.js"></script>
 </body>

@@ -11,6 +11,10 @@ const statusContainer = document.getElementById('status-container');
 const statusMessage = document.getElementById('status-message');
 const progressBar = document.getElementById('progress-bar');
 const debugContainer = document.getElementById('debug-container');
+// NEW: Buttons for the upload feature
+const initialButtons = document.getElementById('initial-buttons');
+const uploadButton = document.getElementById('uploadButton');
+const uploadInput = document.getElementById('uploadInput');
 
 // --- YOUR API KEY IS INCLUDED HERE ---
 const API_KEY = 'K89442506988957';
@@ -25,21 +29,54 @@ navigator.mediaDevices.getUserMedia({
 });
 
 // --- 2. WORKFLOW ---
+
+// Function to switch to the "Scan/Start Over" view
+function showScanUI() {
+    video.classList.add('hidden');
+    canvas.classList.remove('hidden');
+    initialButtons.classList.add('hidden');
+    actionsContainer.classList.remove('hidden');
+}
+
+// When "Capture Image" is clicked
 captureButton.addEventListener('click', () => {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    video.classList.add('hidden');
-    canvas.classList.remove('hidden');
-    captureButton.classList.add('hidden');
-    actionsContainer.classList.remove('hidden');
+    showScanUI();
 });
 
+// NEW: When "Upload from Gallery" is clicked, trigger the hidden file input
+uploadButton.addEventListener('click', () => {
+    uploadInput.click();
+});
+
+// NEW: When a file is selected from the gallery
+uploadInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            context.drawImage(img, 0, 0);
+            showScanUI();
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+
+// When "Start Over" is clicked
 retakeButton.addEventListener('click', () => {
     canvas.classList.add('hidden');
     video.classList.remove('hidden');
     actionsContainer.classList.add('hidden');
-    captureButton.classList.remove('hidden');
+    initialButtons.classList.remove('hidden');
     resultsDiv.innerHTML = '';
     statusContainer.classList.add('hidden');
     debugContainer.classList.add('hidden'); 
@@ -98,23 +135,18 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
 
-    // Create a single, clean string with no spaces or punctuation to search within.
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
     
-    // This is the final, corrected search function
     const findMatches = (list, resultSet) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
-                // Create a clean version of the alias, removing all spaces and punctuation
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                
-                // If the main text string contains the cleaned alias string, we have a match
                 if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
                     resultSet.add(ingredient.name);
-                    break; // Move to the next ingredient group once a match is found
+                    break;
                 }
             }
         });
