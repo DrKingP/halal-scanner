@@ -77,6 +77,17 @@ scanButton.addEventListener('click', () => {
 
 // --- 3. Analyze the Ingredients (FINAL LOGIC) ---
 async function analyzeIngredients(text) {
+    // Show the raw OCR output first
+    debugContainer.classList.remove('hidden');
+    debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
+
+    // NEW: Check if any text was recognized at all
+    if (!text || text.trim() === '') {
+        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>No text could be detected in the image. Please try again with a clear, well-lit photo of printed text.</p></div>`;
+        resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        return; // Exit the function immediately
+    }
+
     const response = await fetch('database.json');
     const db = await response.json();
 
@@ -110,11 +121,5 @@ async function analyzeIngredients(text) {
     }
 
     resultsDiv.innerHTML = html;
-
-    // 👇 ALWAYS SHOW THE DEBUG BOX WITH THE RESULT 👇
-    debugContainer.classList.remove('hidden');
-    debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
-    
-    // Scroll to the main result, not the debug box
     resultsDiv.scrollIntoView({ behavior: 'smooth' });
 }
