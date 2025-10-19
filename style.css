@@ -1,0 +1,58 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    color: #006400; /* Dark Green */
+}
+
+#scanner-container {
+    width: 90%;
+    max-width: 500px;
+    margin: 20px auto;
+    border: 3px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden; /* Hides parts of the video that go outside the box */
+}
+
+#video {
+    width: 100%;
+    display: block;
+}
+
+#scanButton {
+    display: block;
+    width: 90%;
+    max-width: 500px;
+    padding: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    background-color: #28a745; /* Green */
+    border: none;
+    border-radius: 8px;
+    margin: 0 auto 20px auto;
+    cursor: pointer;
+}
+
+#scanButton:active {
+    background-color: #218838; /* Darker Green */
+}
+
+#results {
+    width: 90%;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.haram { background-color: #ffdddd; border: 1px solid #ff8888; }
+.mushbooh { background-color: #fffbdd; border: 1px solid #ffcc00; }
+.halal { background-color: #ddffdd; border: 1px solid #88ff88; }

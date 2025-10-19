@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halal Ingredient Scanner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Halal Ingredient Scanner</h1>
+    <p>Point your camera at an ingredients list and press Scan.</p>
+    
+    <div id="scanner-container">
+        <video id="video" autoplay playsinline></video>
+    </div>
+    
+    <button id="scanButton">Scan Ingredients</button>
+    
+    <div id="results">
+        </div>
+
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+    <script src="app.js"></script>
+</body>
+</html>
