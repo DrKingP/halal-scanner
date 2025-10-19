@@ -59,7 +59,7 @@ scanButton.addEventListener('click', () => {
     formData.append('apikey', API_KEY);
     formData.append('base64Image', imageDataUrl);
     formData.append('language', 'jpn');
-    formData.append('isOverlayRequired', false); // No need for overlay
+    formData.append('isOverlayRequired', false);
 
     fetch('https://api.ocr.space/parse/image', {
         method: 'POST',
@@ -83,7 +83,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (UPGRADED LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL UPGRADED LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -97,39 +97,38 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
 
-    // Prepare the text for searching
-    const cleanedText = text.toLowerCase().replace(/[.,()\[\]{}・「」、。]/g, ' ').replace(/\s+/g, '');
+    // Prepare two versions of the text for robust searching
+    const textWithSpaces = text.toLowerCase().replace(/[.,()（）\[\]{}・「」、。]/g, ' ').replace(/\s+/g, ' ').trim();
+    const textWithoutSpaces = textWithSpaces.replace(/\s+/g, '');
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
     
-    // Function to search for ingredients
+    // This function is now much smarter
     const findMatches = (list, resultSet) => {
         list.forEach(item => {
-            // Check for the item with and without spaces
-            const itemWithSpace = item.toLowerCase();
-            const itemWithoutSpace = itemWithSpace.replace(/\s+/g, '');
-            if (cleanedText.includes(itemWithoutSpace)) {
-                resultSet.add(itemWithSpace);
+            const itemLower = item.toLowerCase();
+            const itemWithoutSpace = itemLower.replace(/\s+/g, '');
+            
+            // Check for a match in both versions of the text
+            if (textWithSpaces.includes(itemLower) || textWithoutSpaces.includes(itemWithoutSpace)) {
+                resultSet.add(item); // Add the original item, not the lowercase version
             }
         });
     };
 
-    // Search for Haram and Mushbooh ingredients
     findMatches([...db.haram_en, ...db.haram_jp], foundHaram);
     findMatches([...db.mushbooh_en, ...db.mushbooh_jp], foundMushbooh);
     
-    // Because we flag all meat as Haram, if we find a Mushbooh meat term, move it to Haram
-    foundMushbooh.forEach(item => {
-        if (db.haram_en.includes(item) || db.haram_jp.includes(item)) {
-            foundHaram.add(item);
-            foundMushbooh.delete(item);
-        }
-    });
+    // Clean up any overlaps (e.g., if a haram item was also in mushbooh)
+    foundHaram.forEach(item => foundMushbooh.delete(item));
 
     let html = '';
     if (foundHaram.size > 0) {
         html = `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p><h3>Haram Ingredients:</h3><p class="ingredient-list">${[...foundHaram].join(', ')}</p></div>`;
+        if (foundMushbooh.size > 0) {
+            html += `<h3>Doubtful Ingredients Also Found:</h3><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p>`;
+        }
     } else if (foundMushbooh.size > 0) {
         html = `<div class="result-box mushbooh"><h2>🟡 Doubtful (Mushbooh)</h2><p>This product is Doubtful. The source of the following ingredients should be verified:</p><h3>Doubtful Ingredients:</h3><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p></div>`;
     } else {
