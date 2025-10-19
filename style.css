@@ -7,15 +7,12 @@ body {
     display: flex;
     justify-content: center;
 }
-
 #main-content {
     width: 100%;
     max-width: 500px;
     text-align: center;
 }
-
 h1 { color: #006400; }
-
 #scanner-container {
     position: relative;
     width: 100%;
@@ -24,16 +21,11 @@ h1 { color: #006400; }
     border-radius: 8px;
     overflow: hidden;
 }
-
 #video { width: 100%; display: block; }
-
-#language-selector { margin-bottom: 20px; font-size: 18px; }
-#language-selector label { margin: 0 15px; }
-
-#captureButton, #crop-and-scan-button, #cancel-crop-button {
+#captureButton, #scan-jpn-button, #scan-eng-button, #cancel-crop-button {
     display: inline-block;
     padding: 15px;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     color: white;
     border: none;
@@ -41,17 +33,12 @@ h1 { color: #006400; }
     margin: 5px;
     cursor: pointer;
 }
-
 #captureButton { background-color: #28a745; width: 100%; }
 #captureButton:active { background-color: #218838; }
-
-/* Styles for the new Cropper Modal */
 #cropper-modal {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background-color: rgba(0, 0, 0, 0.85);
     z-index: 1000;
     display: flex;
@@ -61,17 +48,14 @@ h1 { color: #006400; }
 }
 #cropper-container { max-width: 95%; max-height: 75%; }
 #image-to-crop { max-width: 100%; max-height: 100%; }
-#cropper-actions { margin-top: 20px; }
-#crop-and-scan-button { background-color: #007bff; }
+#cropper-actions { margin-top: 20px; text-align: center; }
+#scan-jpn-button, #scan-eng-button { background-color: #007bff; }
 #cancel-crop-button { background-color: #6c757d; }
-
 .hidden { display: none !important; }
-
 #status-container { margin: 20px auto; width: 100%; background-color: #e9ecef; padding: 15px; border-radius: 8px; text-align: left; box-sizing: border-box;}
 #status-message { margin: 0 0 10px 0; font-weight: bold; text-transform: capitalize; }
 .progress-bar-container { width: 100%; background-color: #ccc; border-radius: 5px; height: 12px; }
 #progress-bar { width: 0%; height: 100%; background-color: #28a745; border-radius: 5px; transition: width 0.2s ease-in-out; }
-
 #results { width: 100%; margin: 20px auto 0 auto; text-align: left; }
 .result-box { padding: 15px; border-radius: 8px; margin-bottom: 15px; }
 .result-box h2 { margin-top: 0; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 10px; }
@@ -82,3 +66,6 @@ h1 { color: #006400; }
 .halal { background-color: #ddffdd; border: 1px solid #4f8a10; }
 .error { background-color: #ffdddd; border: 1px solid #d8000c; }
 .disclaimer { font-size: 12px; color: grey; margin-top: 15px; }
+.raw-text-container { background-color: #f8f9fa; border-top: 2px solid #e9ecef; padding: 10px; margin-top: 15px; border-radius: 0 0 8px 8px; }
+.raw-text-container h4 { margin: 0 0 5px 0; color: #6c757d; }
+.raw-text-container p { margin: 0; font-family: monospace; font-size: 14px; color: #495057; white-space: pre-wrap; }
