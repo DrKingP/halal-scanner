@@ -28,7 +28,6 @@ navigator.mediaDevices.getUserMedia({
 });
 
 // --- 2. WORKFLOW ---
-
 function showScanUI() {
     video.classList.add('hidden');
     canvas.classList.remove('hidden');
@@ -50,7 +49,6 @@ uploadButton.addEventListener('click', () => {
 uploadInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (e) => {
         const img = new Image();
@@ -58,12 +56,10 @@ uploadInput.addEventListener('change', (event) => {
             const MAX_WIDTH = 1024;
             let width = img.width;
             let height = img.height;
-
             if (width > MAX_WIDTH) {
                 height *= MAX_WIDTH / width;
                 width = MAX_WIDTH;
             }
-
             canvas.width = width;
             canvas.height = height;
             context.drawImage(img, 0, 0, width, height);
@@ -85,7 +81,6 @@ retakeButton.addEventListener('click', () => {
     debugContainer.classList.add('hidden'); 
 });
 
-// SCAN BUTTON LOGIC WITH NEW TIMEOUT FEATURE
 scanButton.addEventListener('click', () => {
     scanButton.disabled = true;
     retakeButton.disabled = true;
@@ -94,7 +89,6 @@ scanButton.addEventListener('click', () => {
     statusContainer.classList.remove('hidden');
     statusMessage.textContent = 'Uploading image...';
     progressBar.style.width = '25%';
-
     const imageDataUrl = canvas.toDataURL('image/jpeg');
     const formData = new FormData();
     formData.append('apikey', API_KEY);
@@ -102,18 +96,10 @@ scanButton.addEventListener('click', () => {
     formData.append('language', 'jpn');
     formData.append('isOverlayRequired', false);
 
-    // --- NEW TIMEOUT LOGIC ---
-    const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timed out')), 20000); // 20 seconds
-    });
-
-    const fetchPromise = fetch('https://api.ocr.space/parse/image', {
+    fetch('https://api.ocr.space/parse/image', {
         method: 'POST',
         body: formData
-    });
-
-    // Race the fetch request against the timeout
-    Promise.race([fetchPromise, timeoutPromise])
+    })
     .then(response => response.json())
     .then(data => {
         statusMessage.textContent = 'Analyzing text...';
@@ -123,11 +109,7 @@ scanButton.addEventListener('click', () => {
     })
     .catch(err => {
         console.error(err);
-        let errorMessage = 'Could not connect to the OCR server. Please check your connection and API key.';
-        if (err.message === 'Request timed out') {
-            errorMessage = 'The server is taking too long to respond. Please try again.';
-        }
-        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>${errorMessage}</p></div>`;
+        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>Could not connect to the OCR server. Please check your connection and API key.</p></div>`;
     })
     .finally(() => {
         scanButton.disabled = false;
@@ -136,7 +118,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients ---
+// --- 3. Analyze the Ingredients (FINAL LOGIC - SHOWS SPECIFIC ITEMS) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -156,13 +138,13 @@ async function analyzeIngredients(text) {
     let foundHaram = new Set();
     let foundMushbooh = new Set();
     
+    // This function now adds the specific alias found, not the category name
     const findMatches = (list, resultSet) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                 if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
-                    resultSet.add(ingredient.name);
-                    break;
+                    resultSet.add(alias); // Add the specific alias that was matched
                 }
             }
         });
@@ -171,6 +153,7 @@ async function analyzeIngredients(text) {
     findMatches(db.haram, foundHaram);
     findMatches(db.mushbooh, foundMushbooh);
     
+    // Clean up overlaps: if an alias is in both lists, keep it only in Haram
     foundHaram.forEach(item => foundMushbooh.delete(item));
 
     let html = '';
