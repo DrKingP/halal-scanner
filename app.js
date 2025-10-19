@@ -47,7 +47,6 @@ uploadButton.addEventListener('click', () => {
     uploadInput.click();
 });
 
-// NEW, IMPROVED UPLOAD LOGIC WITH IMAGE RESIZING
 uploadInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -56,8 +55,7 @@ uploadInput.addEventListener('change', (event) => {
     reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-            // --- NEW RESIZING LOGIC ---
-            const MAX_WIDTH = 1024; // Set a max width for the image
+            const MAX_WIDTH = 1024;
             let width = img.width;
             let height = img.height;
 
@@ -65,17 +63,15 @@ uploadInput.addEventListener('change', (event) => {
                 height *= MAX_WIDTH / width;
                 width = MAX_WIDTH;
             }
-            // --- END RESIZING LOGIC ---
 
             canvas.width = width;
             canvas.height = height;
-            context.drawImage(img, 0, 0, width, height); // Draw the resized image
+            context.drawImage(img, 0, 0, width, height);
             showScanUI();
         };
         img.src = e.target.result;
     };
     reader.readAsDataURL(file);
-    // Reset input value to allow uploading the same file again
     event.target.value = '';
 });
 
@@ -89,6 +85,7 @@ retakeButton.addEventListener('click', () => {
     debugContainer.classList.add('hidden'); 
 });
 
+// SCAN BUTTON LOGIC WITH NEW TIMEOUT FEATURE
 scanButton.addEventListener('click', () => {
     scanButton.disabled = true;
     retakeButton.disabled = true;
@@ -105,10 +102,18 @@ scanButton.addEventListener('click', () => {
     formData.append('language', 'jpn');
     formData.append('isOverlayRequired', false);
 
-    fetch('https://api.ocr.space/parse/image', {
+    // --- NEW TIMEOUT LOGIC ---
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out')), 20000); // 20 seconds
+    });
+
+    const fetchPromise = fetch('https://api.ocr.space/parse/image', {
         method: 'POST',
         body: formData
-    })
+    });
+
+    // Race the fetch request against the timeout
+    Promise.race([fetchPromise, timeoutPromise])
     .then(response => response.json())
     .then(data => {
         statusMessage.textContent = 'Analyzing text...';
@@ -118,7 +123,11 @@ scanButton.addEventListener('click', () => {
     })
     .catch(err => {
         console.error(err);
-        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>Could not connect to the OCR server. Please check your connection and API key.</p></div>`;
+        let errorMessage = 'Could not connect to the OCR server. Please check your connection and API key.';
+        if (err.message === 'Request timed out') {
+            errorMessage = 'The server is taking too long to respond. Please try again.';
+        }
+        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>${errorMessage}</p></div>`;
     })
     .finally(() => {
         scanButton.disabled = false;
@@ -127,7 +136,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL, BULLETPROOF LOGIC) ---
+// --- 3. Analyze the Ingredients ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
