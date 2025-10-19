@@ -83,13 +83,11 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL LOGIC WITH QUALITY CHECK) ---
+// --- 3. Analyze the Ingredients (FINAL, MOST ROBUST LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
 
-    // --- NEW QUALITY CHECK ---
-    // A simple check: if the text contains many strange characters, it's likely a bad scan.
     const qualityCheck = (text.match(/[^a-zA-Z0-9\s\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF]/g) || []).length;
     if ((text.length > 0 && qualityCheck / text.length > 0.3) || text.trim() === '') {
         resultsDiv.innerHTML = `<div class="result-box error"><h2>Poor Scan Quality</h2><p>The text could not be read clearly. Please try again with a better lit, non-reflective, and focused photo.</p></div>`;
@@ -100,14 +98,19 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
 
-    const searchableText = text.toLowerCase();
+    const searchableText = text.toLowerCase().replace(/[.,()（）\[\]{}・「」、。]/g, ' ').replace(/\s+/g, ' ').trim();
+
     let foundHaram = new Set();
     let foundMushbooh = new Set();
     
+    // This is the final, corrected search function
     const findMatches = (list, resultSet) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
-                const regex = new RegExp(`\\b${alias.toLowerCase().replace(/ /g, '\\s*')}\\b`, 'i');
+                // Clean the alias in the same way as the main text
+                const cleanedAlias = alias.toLowerCase().replace(/[.,()（）\[\]{}・「」、。]/g, ' ').replace(/\s+/g, ' ').trim();
+                // Create a regex to find this cleaned alias as a whole phrase
+                const regex = new RegExp(`\\b${cleanedAlias.replace(/ /g, '\\s+')}\\b`, 'i');
                 if (regex.test(searchableText)) {
                     resultSet.add(ingredient.name);
                     break;
