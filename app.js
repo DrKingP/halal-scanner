@@ -74,12 +74,11 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (WITH THE FIX) ---
+// --- 3. Analyze the Ingredients ---
 async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
     
-    // 👇 THIS IS THE FIXED LINE 👇
     const ingredientsFromImage = text.toLowerCase().replace(/[^a-z0-9\s]/gi, ' ').split(/\s+/);
     
     let foundHaram = new Set();
