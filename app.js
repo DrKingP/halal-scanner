@@ -118,14 +118,14 @@ async function analyzeIngredients(text) {
     
     foundHaram.forEach(item => foundMushbooh.delete(item));
 
-    // NEW: Create a list of recognized Halal ingredients
-    let foundHalal = new Set();
-    const allProblematic = new Set([...foundHaram, ...foundMushbooh]);
+    // NEW: Create a list of recognized words that are NOT flagged
+    let foundSafe = new Set();
+    const problematicLower = new Set([...foundHaram, ...foundMushbooh].map(item => item.toLowerCase()));
     const allRecognizedWords = new Set(searchableText.split(' '));
     
     allRecognizedWords.forEach(word => {
-        if (word.length > 2 && !allProblematic.has(word)) {
-            foundHalal.add(word);
+        if (word.length > 2 && !problematicLower.has(word)) {
+            foundSafe.add(word);
         }
     });
 
@@ -145,12 +145,12 @@ async function analyzeIngredients(text) {
         html = `<div class="result-box halal"><h2>✅ Halal</h2><p>Based on our database, no Haram or Doubtful ingredients were detected.</p></div>`;
     }
 
-    // NEW: Add the collapsible Halal ingredients list
-    if (foundHalal.size > 0) {
+    // NEW: Add the collapsible list for safe ingredients
+    if (foundSafe.size > 0) {
         html += `
             <details class="halal-details">
-                <summary>Show Recognized Halal Ingredients</summary>
-                <p class="ingredient-list">${[...foundHalal].join(', ')}</p>
+                <summary>Show Recognized Safe Ingredients</summary>
+                <p class="ingredient-list">${[...foundSafe].join(', ')}</p>
             </details>
         `;
     }
