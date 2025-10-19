@@ -1,149 +1,109 @@
-// Get all the HTML elements we need
-const video = document.getElementById('video');
-const canvas = document.getElementById('canvas');
-const resultsDiv = document.getElementById('results');
-const captureButton = document.getElementById('captureButton');
-const scanButton = document.getElementById('scanButton');
-const retakeButton = document.getElementById('retakeButton');
-const actionsContainer = document.getElementById('actions-container');
-const context = canvas.getContext('2d');
-const statusContainer = document.getElementById('status-container');
-const statusMessage = document.getElementById('status-message');
-const progressBar = document.getElementById('progress-bar');
-const debugContainer = document.getElementById('debug-container');
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
 
-// --- YOUR API KEY IS INCLUDED HERE ---
-const API_KEY = 'K89442506988957';
+h1 {
+    color: #006400;
+}
 
-// --- 1. Start the Camera ---
-navigator.mediaDevices.getUserMedia({ 
-    video: { facingMode: 'environment' } 
-})
-.then(function(stream) {
-    video.srcObject = stream;
-    video.play();
-});
+/* Flexbox container for the two columns */
+.main-container {
+    display: flex;
+    flex-wrap: wrap; /* Allows columns to wrap on small screens */
+    justify-content: center;
+    gap: 20px;
+    max-width: 1000px;
+    margin: 20px auto;
+}
 
-// --- 2. WORKFLOW ---
-captureButton.addEventListener('click', () => {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    video.classList.add('hidden');
-    canvas.classList.remove('hidden');
-    captureButton.classList.add('hidden');
-    actionsContainer.classList.remove('hidden');
-});
+.left-column, .right-column {
+    flex: 1; /* Each column takes up equal space */
+    min-width: 300px; /* Minimum width before wrapping */
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
 
-retakeButton.addEventListener('click', () => {
-    canvas.classList.add('hidden');
-    video.classList.remove('hidden');
-    actionsContainer.classList.add('hidden');
-    captureButton.classList.remove('hidden');
-    resultsDiv.innerHTML = '';
-    statusContainer.classList.add('hidden');
-    debugContainer.classList.add('hidden'); 
-});
+#scanner-container {
+    position: relative;
+    width: 100%;
+    border: 3px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+}
 
-scanButton.addEventListener('click', () => {
-    scanButton.disabled = true;
-    retakeButton.disabled = true;
-    resultsDiv.innerHTML = '';
-    debugContainer.classList.add('hidden');
-    statusContainer.classList.remove('hidden');
-    statusMessage.textContent = 'Uploading image...';
-    progressBar.style.width = '25%';
+#video, #canvas {
+    width: 100%;
+    display: block;
+}
 
-    const imageDataUrl = canvas.toDataURL('image/jpeg');
-    const formData = new FormData();
-    formData.append('apikey', API_KEY);
-    formData.append('base64Image', imageDataUrl);
-    formData.append('language', 'jpn');
-    formData.append('isOverlayRequired', false);
+#captureButton, #scanButton, #retakeButton {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    margin: 10px 0;
+    cursor: pointer;
+}
 
-    fetch('https://api.ocr.space/parse/image', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        statusMessage.textContent = 'Analyzing text...';
-        progressBar.style.width = '75%';
-        const recognizedText = data.ParsedResults[0]?.ParsedText || 'No text recognized.';
-        analyzeIngredients(recognizedText);
-    })
-    .catch(err => {
-        console.error(err);
-        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>Could not connect to the OCR server. Please check your connection and API key.</p></div>`;
-    })
-    .finally(() => {
-        scanButton.disabled = false;
-        retakeButton.disabled = false;
-        statusContainer.classList.add('hidden');
-    });
-});
+#captureButton, #scanButton { background-color: #28a745; }
+#captureButton:active, #scanButton:active { background-color: #218838; }
+#retakeButton { background-color: #6c757d; }
+#retakeButton:active { background-color: #5a6268; }
 
-// --- 3. Analyze the Ingredients (FINAL, MOST ROBUST LOGIC) ---
-async function analyzeIngredients(text) {
-    debugContainer.classList.remove('hidden');
-    debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
+.hidden { display: none !important; }
 
-    if (!text || text.trim() === '') {
-        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>No text could be detected in the image.</p></div>`;
-        resultsDiv.scrollIntoView({ behavior: 'smooth' });
-        return;
-    }
+#results { width: 100%; text-align: left; }
+.result-box { padding: 15px; border-radius: 8px; margin-top: 20px; }
+.result-box h2 { margin-top: 0; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 10px; }
+.result-box h3 { margin-bottom: 5px; }
+.ingredient-list { font-weight: bold; word-wrap: break-word; }
+.haram { background-color: #ffdddd; border: 1px solid #d8000c; }
+.mushbooh { background-color: #fffbdd; border: 1px solid #9f6000; }
+.halal { background-color: #ddffdd; border: 1px solid #4f8a10; }
+.error { background-color: #ffdddd; border: 1px solid #d8000c; }
 
-    const response = await fetch('database.json');
-    const db = await response.json();
+#status-container { margin-top: 20px; }
+.progress-bar-container { width: 100%; background-color: #ccc; border-radius: 5px; height: 12px; }
+#progress-bar { width: 0%; height: 100%; background-color: #28a745; border-radius: 5px; transition: width 0.2s ease-in-out; }
+#status-message { margin: 0 0 10px 0; font-weight: bold; text-transform: capitalize; text-align: left; }
 
-    // Prepare a clean version of the scanned text for searching
-    const searchableText = text.toLowerCase().replace(/[.,()（）\[\]{}・「」、。]/g, ' ').replace(/\s+/g, ' ').trim();
-    const searchableTextNoSpaces = searchableText.replace(/\s+/g, '');
+#debug-container {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-family: monospace;
+    text-align: left;
+}
+#debug-container h3 {
+    margin-top: 0;
+    font-size: 14px;
+    color: #6c757d;
+}
+#debug-container pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: #212529;
+}
 
-    let foundHaram = new Set();
-    let foundMushbooh = new Set();
-    
-    // This new search function is much smarter
-    const findMatches = (list, resultSet) => {
-        list.forEach(item => {
-            const itemLower = item.toLowerCase();
-            const itemWithoutSpaces = itemLower.replace(/\s+/g, '');
-            
-            // Check if the item (with or without spaces) exists in the scanned text
-            if (searchableText.includes(itemLower) || (itemWithoutSpaces.length > 2 && searchableTextNoSpaces.includes(itemWithoutSpaces))) {
-                resultSet.add(item);
-            }
-        });
-    };
+.disclaimer { font-size: 12px; color: grey; margin-top: 15px; }
 
-    // Find all potential matches
-    findMatches([...db.haram_en, ...db.haram_jp], foundHaram);
-    findMatches([...db.mushbooh_en, ...db.mushbooh_jp], foundMushbooh);
-    
-    // Ensure that if an item is Haram, it is not also listed as Mushbooh
-    foundHaram.forEach(item => foundMushbooh.delete(item));
-
-    // Build the final result HTML
-    let html = '';
-    if (foundHaram.size > 0) {
-        html += `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p><h3>Haram Ingredients:</h3><p class="ingredient-list">${[...foundHaram].join(', ')}</p></div>`;
-    }
-    
-    if (foundMushbooh.size > 0) {
-        // If Haram items were also found, add a separate section for Mushbooh items
-        if (foundHaram.size > 0) {
-            html += `<div class="result-box mushbooh" style="margin-top: 15px;"><h3>🟡 Doubtful Ingredients Also Found:</h3><p>The source of the following ingredients should be verified:</p><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p></div>`;
-        } else {
-            // Otherwise, show the main Mushbooh result
-            html = `<div class="result-box mushbooh"><h2>🟡 Doubtful (Mushbooh)</h2><p>This product is Doubtful. The source of the following ingredients should be verified:</p><h3>Doubtful Ingredients:</h3><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p></div>`;
-        }
-    }
-
-    if (html === '') {
-        html = `<div class="result-box halal"><h2>✅ Halal</h2><p>Based on our database, no Haram or Doubtful ingredients were detected.</p></div>`;
-    }
-
-    resultsDiv.innerHTML = html;
-    resultsDiv.scrollIntoView({ behavior: 'smooth' });
+/* Media query for mobile devices */
+@media (max-width: 600px) {
+  #scanner-container {
+    /* Limit the height to 40% of the screen's vertical height */
+    max-height: 40vh;
+  }
 }
