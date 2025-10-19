@@ -12,6 +12,9 @@ const statusMessage = document.getElementById('status-message');
 const progressBar = document.getElementById('progress-bar');
 const debugContainer = document.getElementById('debug-container');
 
+// --- YOUR API KEY IS INCLUDED HERE ---
+const API_KEY = 'K89442506988957';
+
 // --- 1. Start the Camera ---
 navigator.mediaDevices.getUserMedia({ 
     video: { facingMode: 'environment' } 
@@ -19,10 +22,6 @@ navigator.mediaDevices.getUserMedia({
 .then(function(stream) {
     video.srcObject = stream;
     video.play();
-})
-.catch(function(err) {
-    console.error("Camera Error:", err);
-    resultsDiv.innerHTML = `<div class="result-box error"><h2>Camera Error</h2><p>Could not access the camera. Please check browser and system permissions.</p></div>`;
 });
 
 // --- 2. WORKFLOW ---
@@ -46,56 +45,66 @@ retakeButton.addEventListener('click', () => {
     debugContainer.classList.add('hidden'); 
 });
 
+// THIS IS THE NEW SCANNING LOGIC
 scanButton.addEventListener('click', () => {
     scanButton.disabled = true;
     retakeButton.disabled = true;
     resultsDiv.innerHTML = '';
     debugContainer.classList.add('hidden');
     statusContainer.classList.remove('hidden');
-    progressBar.style.width = '0%';
-    
-    const languages = 'eng+jpn';
+    statusMessage.textContent = 'Uploading image...';
+    progressBar.style.width = '25%';
 
-    Tesseract.recognize(
-        canvas,
-        languages,
-        { logger: m => {
-            statusMessage.textContent = `${m.status.replace(/_/g, ' ')}...`;
-            if (m.status === 'recognizing text') { progressBar.style.width = `${m.progress * 100}%`; }
-        }}
-    ).then(({ data: { text } }) => {
-        analyzeIngredients(text);
-    }).catch(err => {
+    // Convert the image on the canvas to a format we can send
+    const imageDataUrl = canvas.toDataURL('image/jpeg');
+
+    // Prepare the data to send to the server
+    const formData = new FormData();
+    formData.append('apikey', API_KEY);
+    formData.append('base64Image', imageDataUrl);
+    formData.append('language', 'jpn'); // We prioritize Japanese
+    formData.append('detectOrientation', 'true'); // Helps with rotated text
+    formData.append('scale', 'true'); // Helps with image quality
+
+    // Send the image to the OCR.space server
+    fetch('https://api.ocr.space/parse/image', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        statusMessage.textContent = 'Analyzing text...';
+        progressBar.style.width = '75%';
+        // Extract the clean text from the server's response
+        const recognizedText = data.ParsedResults[0]?.ParsedText || 'No text recognized.';
+        analyzeIngredients(recognizedText);
+    })
+    .catch(err => {
         console.error(err);
-        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>Could not read the text. Please try again with a clearer image.</p></div>`;
-    }).finally(() => {
+        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>Could not connect to the OCR server. Please check your connection and API key.</p></div>`;
+    })
+    .finally(() => {
         scanButton.disabled = false;
         retakeButton.disabled = false;
         statusContainer.classList.add('hidden');
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL LOGIC) ---
+// --- 3. Analyze the Ingredients (This function remains the same) ---
 async function analyzeIngredients(text) {
-    // Show the raw OCR output first
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
 
-    // NEW: Check if any text was recognized at all
     if (!text || text.trim() === '') {
-        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>No text could be detected in the image. Please try again with a clear, well-lit photo of printed text.</p></div>`;
+        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>No text could be detected in the image.</p></div>`;
         resultsDiv.scrollIntoView({ behavior: 'smooth' });
-        return; // Exit the function immediately
+        return;
     }
 
     const response = await fetch('database.json');
     const db = await response.json();
 
-    const ingredientsFromImage = text
-        .toLowerCase()
-        .replace(/[.,()"\[\]{}・「」、。]/g, ' ')
-        .split(/\s+/) 
-        .filter(word => word.length > 0);
+    const ingredientsFromImage = text.toLowerCase().replace(/[.,()"\[\]{}・「」、。]/g, ' ').split(/\s+/).filter(word => word.length > 0);
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
@@ -103,12 +112,8 @@ async function analyzeIngredients(text) {
     const allMushbooh = [...db.mushbooh_en, ...db.mushbooh_jp];
     
     ingredientsFromImage.forEach(ingredient => {
-        if (allHaram.includes(ingredient)) {
-            foundHaram.add(ingredient);
-        }
-        if (allMushbooh.includes(ingredient)) {
-            foundMushbooh.add(ingredient);
-        }
+        if (allHaram.includes(ingredient)) { foundHaram.add(ingredient); }
+        if (allMushbooh.includes(ingredient)) { foundMushbooh.add(ingredient); }
     });
 
     let html = '';
