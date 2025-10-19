@@ -11,7 +11,6 @@ const statusContainer = document.getElementById('status-container');
 const statusMessage = document.getElementById('status-message');
 const progressBar = document.getElementById('progress-bar');
 const debugContainer = document.getElementById('debug-container');
-// NEW: Buttons for the upload feature
 const initialButtons = document.getElementById('initial-buttons');
 const uploadButton = document.getElementById('uploadButton');
 const uploadInput = document.getElementById('uploadInput');
@@ -30,7 +29,6 @@ navigator.mediaDevices.getUserMedia({
 
 // --- 2. WORKFLOW ---
 
-// Function to switch to the "Scan/Start Over" view
 function showScanUI() {
     video.classList.add('hidden');
     canvas.classList.remove('hidden');
@@ -38,7 +36,6 @@ function showScanUI() {
     actionsContainer.classList.remove('hidden');
 }
 
-// When "Capture Image" is clicked
 captureButton.addEventListener('click', () => {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -46,12 +43,11 @@ captureButton.addEventListener('click', () => {
     showScanUI();
 });
 
-// NEW: When "Upload from Gallery" is clicked, trigger the hidden file input
 uploadButton.addEventListener('click', () => {
     uploadInput.click();
 });
 
-// NEW: When a file is selected from the gallery
+// NEW, IMPROVED UPLOAD LOGIC WITH IMAGE RESIZING
 uploadInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -60,18 +56,29 @@ uploadInput.addEventListener('change', (event) => {
     reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-            canvas.width = img.width;
-            canvas.height = img.height;
-            context.drawImage(img, 0, 0);
+            // --- NEW RESIZING LOGIC ---
+            const MAX_WIDTH = 1024; // Set a max width for the image
+            let width = img.width;
+            let height = img.height;
+
+            if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+            }
+            // --- END RESIZING LOGIC ---
+
+            canvas.width = width;
+            canvas.height = height;
+            context.drawImage(img, 0, 0, width, height); // Draw the resized image
             showScanUI();
         };
         img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+    // Reset input value to allow uploading the same file again
+    event.target.value = '';
 });
 
-
-// When "Start Over" is clicked
 retakeButton.addEventListener('click', () => {
     canvas.classList.add('hidden');
     video.classList.remove('hidden');
