@@ -83,7 +83,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL, DE-DUPLICATED LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL, WHOLE-WORD MATCHING LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -97,22 +97,25 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
 
-    const searchableText = text.toLowerCase().replace(/[.,()（）\[\]{}・「」、。]/g, ' ').replace(/\s+/g, ' ').trim();
-    const searchableTextNoSpaces = searchableText.replace(/\s+/g, '');
+    // Create a clean set of individual words from the scanned text
+    const recognizedWords = new Set(
+        text.toLowerCase()
+            .replace(/[.,()（）\[\]{}・「」、。]/g, ' ') // Replace punctuation with spaces
+            .split(/\s+/) // Split by spaces
+            .filter(word => word.length > 0) // Remove empty items
+    );
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
     
-    // This new function searches the structured database
+    // This function now checks for whole-word matches
     const findMatches = (list, resultSet) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
-                const aliasLower = alias.toLowerCase();
-                const aliasWithoutSpaces = aliasLower.replace(/\s+/g, '');
-                
-                if (searchableText.includes(aliasLower) || (aliasWithoutSpaces.length > 2 && searchableTextNoSpaces.includes(aliasWithoutSpaces))) {
-                    resultSet.add(ingredient.name); // Add the main name, not the alias
-                    break; // Move to the next ingredient once a match is found
+                // Check if any of the recognized words is an exact match for an alias
+                if (recognizedWords.has(alias.toLowerCase())) {
+                    resultSet.add(ingredient.name);
+                    break; 
                 }
             }
         });
@@ -123,6 +126,7 @@ async function analyzeIngredients(text) {
     
     foundHaram.forEach(item => foundMushbooh.delete(item));
 
+    // Build the final result HTML
     let html = '';
     if (foundHaram.size > 0) {
         html += `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p><h3>Haram Ingredients:</h3><p class="ingredient-list">${[...foundHaram].join(', ')}</p></div>`;
