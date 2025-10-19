@@ -83,7 +83,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL LOGIC WITH HALAL LIST) ---
+// --- 3. Analyze the Ingredients (FINAL, DE-DUPLICATED LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -103,33 +103,26 @@ async function analyzeIngredients(text) {
     let foundHaram = new Set();
     let foundMushbooh = new Set();
     
+    // This new function searches the structured database
     const findMatches = (list, resultSet) => {
-        list.forEach(item => {
-            const itemLower = item.toLowerCase();
-            const itemWithoutSpaces = itemLower.replace(/\s+/g, '');
-            if (searchableText.includes(itemLower) || (itemWithoutSpaces.length > 2 && searchableTextNoSpaces.includes(itemWithoutSpaces))) {
-                resultSet.add(item);
+        list.forEach(ingredient => {
+            for (const alias of ingredient.aliases) {
+                const aliasLower = alias.toLowerCase();
+                const aliasWithoutSpaces = aliasLower.replace(/\s+/g, '');
+                
+                if (searchableText.includes(aliasLower) || (aliasWithoutSpaces.length > 2 && searchableTextNoSpaces.includes(aliasWithoutSpaces))) {
+                    resultSet.add(ingredient.name); // Add the main name, not the alias
+                    break; // Move to the next ingredient once a match is found
+                }
             }
         });
     };
 
-    findMatches([...db.haram_en, ...db.haram_jp], foundHaram);
-    findMatches([...db.mushbooh_en, ...db.mushbooh_jp], foundMushbooh);
+    findMatches(db.haram, foundHaram);
+    findMatches(db.mushbooh, foundMushbooh);
     
     foundHaram.forEach(item => foundMushbooh.delete(item));
 
-    // NEW: Create a list of recognized words that are NOT flagged
-    let foundSafe = new Set();
-    const problematicLower = new Set([...foundHaram, ...foundMushbooh].map(item => item.toLowerCase()));
-    const allRecognizedWords = new Set(searchableText.split(' '));
-    
-    allRecognizedWords.forEach(word => {
-        if (word.length > 2 && !problematicLower.has(word)) {
-            foundSafe.add(word);
-        }
-    });
-
-    // Build the final result HTML
     let html = '';
     if (foundHaram.size > 0) {
         html += `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p><h3>Haram Ingredients:</h3><p class="ingredient-list">${[...foundHaram].join(', ')}</p></div>`;
@@ -143,16 +136,6 @@ async function analyzeIngredients(text) {
 
     if (html === '') {
         html = `<div class="result-box halal"><h2>✅ Halal</h2><p>Based on our database, no Haram or Doubtful ingredients were detected.</p></div>`;
-    }
-
-    // NEW: Add the collapsible list for safe ingredients
-    if (foundSafe.size > 0) {
-        html += `
-            <details class="halal-details">
-                <summary>Show Recognized Safe Ingredients</summary>
-                <p class="ingredient-list">${[...foundSafe].join(', ')}</p>
-            </details>
-        `;
     }
 
     resultsDiv.innerHTML = html;
