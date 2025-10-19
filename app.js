@@ -83,7 +83,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL, WHOLE-WORD MATCHING LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL, PROFESSIONAL LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -97,25 +97,21 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
 
-    // Create a clean set of individual words from the scanned text
-    const recognizedWords = new Set(
-        text.toLowerCase()
-            .replace(/[.,()（）\[\]{}・「」、。]/g, ' ') // Replace punctuation with spaces
-            .split(/\s+/) // Split by spaces
-            .filter(word => word.length > 0) // Remove empty items
-    );
+    const searchableText = text.toLowerCase();
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
     
-    // This function now checks for whole-word matches
+    // This new function uses Regular Expressions for accurate, whole-word matching
     const findMatches = (list, resultSet) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
-                // Check if any of the recognized words is an exact match for an alias
-                if (recognizedWords.has(alias.toLowerCase())) {
+                // Create a regular expression to find the alias as a whole word
+                // This prevents matching 'fat' inside 'nonfat'
+                const regex = new RegExp(`\\b${alias.toLowerCase().replace(/ /g, '\\s*')}\\b`, 'i');
+                if (regex.test(searchableText)) {
                     resultSet.add(ingredient.name);
-                    break; 
+                    break;
                 }
             }
         });
