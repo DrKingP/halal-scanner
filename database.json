@@ -1,25 +1,45 @@
 {
-    "haram": [
-      "gelatin",
-      "carmine",
-      "cochineal",
-      "lard",
-      "bacon",
-      "pepsin",
-      "alcohol",
-      "pork",
-      "chicken",
-      "beef",
-      "shellac"
-    ],
-    "mushbooh": [
-      "glycerin",
-      "glycerol",
-      "enzymes",
-      "mono and diglycerides",
-      "magnesium stearate",
-      "whey",
-      "vanilla extract",
-      "disodium inosinate"
-    ]
-  }
+  "haram_en": [
+    "gelatin",
+    "carmine",
+    "cochineal",
+    "lard",
+    "bacon",
+    "pepsin",
+    "alcohol",
+    "shellac",
+    "pork",
+    "chicken",
+    "beef"
+  ],
+  "mushbooh_en": [
+    "glycerin",
+    "glycerol",
+    "enzymes",
+    "mono and diglycerides",
+    "magnesium stearate",
+    "whey",
+    "vanilla extract",
+    "disodium inosinate"
+  ],
+  "haram_jp": [
+    "ゼラチン",
+    "ラード",
+    "酒精",
+    "アルコール",
+    "ペプシン",
+    "コチニール",
+    "カルミン",
+    "豚肉",
+    "牛肉",
+    "鶏肉"
+  ],
+  "mushbooh_jp": [
+    "グリセリン",
+    "乳化剤",
+    "酵素",
+    "ホエイ",
+    "ショートニング",
+    "香料"
+  ]
+}
