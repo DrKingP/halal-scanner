@@ -95,15 +95,8 @@ scanButton.addEventListener('click', () => {
     formData.append('base64Image', imageDataUrl);
     formData.append('language', 'jpn');
     formData.append('isOverlayRequired', false);
-
-    const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timed out')), 20000); // 20 seconds
-    });
-    const fetchPromise = fetch('https://api.ocr.space/parse/image', {
-        method: 'POST',
-        body: formData
-    });
-
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 20000));
+    const fetchPromise = fetch('https://api.ocr.space/parse/image', { method: 'POST', body: formData });
     Promise.race([fetchPromise, timeoutPromise])
     .then(response => response.json())
     .then(data => {
@@ -127,7 +120,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL LOGIC - GROUPED RESULTS) ---
+// --- 3. Analyze the Ingredients (FINAL LOGIC WITH EXCLUSIONS) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -144,11 +137,9 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // These will now store data like: { "Category Name": Set{"item1", "item2"} }
     let foundHaram = {};
     let foundMushbooh = {};
     
-    // This function now groups the found aliases by their category name
     const findMatches = (list, resultMap) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
@@ -166,12 +157,31 @@ async function analyzeIngredients(text) {
     findMatches(db.haram, foundHaram);
     findMatches(db.mushbooh, foundMushbooh);
     
-    // Ensure that if a category is in Haram, it's not also in Mushbooh
+    // --- NEW EXCLUSION LOGIC ---
+    for (const category in foundMushbooh) {
+        let aliasesToRemove = new Set();
+        foundMushbooh[category].forEach(alias => {
+            if (db.halal_exceptions[alias.toLowerCase()]) {
+                for (const exceptionPhrase of db.halal_exceptions[alias.toLowerCase()]) {
+                    const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
+                    if (searchableText.includes(cleanedException)) {
+                        aliasesToRemove.add(alias);
+                        break; 
+                    }
+                }
+            }
+        });
+        aliasesToRemove.forEach(alias => foundMushbooh[category].delete(alias));
+        if (foundMushbooh[category].size === 0) {
+            delete foundMushbooh[category];
+        }
+    }
+    // --- END EXCLUSION LOGIC ---
+
     for (const category in foundHaram) {
         delete foundMushbooh[category];
     }
 
-    // Function to generate the list HTML
     const generateListHtml = (resultMap) => {
         let listHtml = '';
         for (const category in resultMap) {
