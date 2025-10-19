@@ -51,7 +51,6 @@ scanButton.addEventListener('click', () => {
     statusContainer.classList.remove('hidden');
     progressBar.style.width = '0%';
     
-    // We will scan for both English and Japanese by default
     const languages = 'eng+jpn';
 
     Tesseract.recognize(
@@ -80,19 +79,18 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
     
-    // THIS IS THE CRITICAL CLEANING STEP, NOW CORRECTED
+    // THIS IS THE CORRECTED CLEANING LOGIC
     const ingredientsFromImage = text
         .toLowerCase()
-        .replace(/[^a-z\s]/gi, ' ') // Keep only letters and spaces
-        .split(/\s+/) // Split by one or more spaces
-        .filter(word => word.length > 2); // Only keep words longer than 2 letters
+        .split(/\s+/) // Split by any whitespace (spaces, newlines, etc.)
+        .map(word => word.replace(/[.,()"\[\]{}・「」、。]/g, '')) // Remove common punctuation from each word
+        .filter(word => word.length >= 2); // Keep words with 2 OR MORE characters
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
     const allHaram = [...db.haram_en, ...db.haram_jp];
     const allMushbooh = [...db.mushbooh_en, ...db.mushbooh_jp];
     
-    // THIS LOOP CHECKS EACH CLEANED WORD
     ingredientsFromImage.forEach(ingredient => {
         if (allHaram.includes(ingredient)) {
             foundHaram.add(ingredient);
