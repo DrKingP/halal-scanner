@@ -78,3 +78,24 @@ h1 {
 #status-message { margin: 0 0 10px 0; font-weight: bold; text-transform: capitalize; text-align: left; }
 
 .disclaimer { font-size: 12px; color: grey; margin-top: 15px; }
+
+/* NEW STYLES FOR DEBUG VIEW */
+#debug-container {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-family: monospace;
+    text-align: left;
+}
+#debug-container h3 {
+    margin-top: 0;
+    font-size: 14px;
+    color: #6c757d;
+}
+#debug-container pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: #212529;
+}

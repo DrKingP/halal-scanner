@@ -10,6 +10,8 @@ const context = canvas.getContext('2d');
 const statusContainer = document.getElementById('status-container');
 const statusMessage = document.getElementById('status-message');
 const progressBar = document.getElementById('progress-bar');
+// NEW: Debug container
+const debugContainer = document.getElementById('debug-container');
 
 // --- 1. Start the Camera ---
 navigator.mediaDevices.getUserMedia({ 
@@ -42,12 +44,14 @@ retakeButton.addEventListener('click', () => {
     captureButton.classList.remove('hidden');
     resultsDiv.innerHTML = '';
     statusContainer.classList.add('hidden');
+    debugContainer.classList.add('hidden'); // Hide debug on retake
 });
 
 scanButton.addEventListener('click', () => {
     scanButton.disabled = true;
     retakeButton.disabled = true;
     resultsDiv.innerHTML = '';
+    debugContainer.classList.add('hidden');
     statusContainer.classList.remove('hidden');
     progressBar.style.width = '0%';
     
@@ -58,9 +62,7 @@ scanButton.addEventListener('click', () => {
         languages,
         { logger: m => {
             statusMessage.textContent = `${m.status.replace(/_/g, ' ')}...`;
-            if (m.status === 'recognizing text') {
-                progressBar.style.width = `${m.progress * 100}%`;
-            }
+            if (m.status === 'recognizing text') { progressBar.style.width = `${m.progress * 100}%`; }
         }}
     ).then(({ data: { text } }) => {
         analyzeIngredients(text);
@@ -74,17 +76,22 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (CORRECTED LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL CORRECTED LOGIC) ---
 async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
+
+    // Show the raw OCR output for debugging
+    debugContainer.classList.remove('hidden');
+    debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
     
-    // THIS IS THE CORRECTED CLEANING LOGIC
+    // Final, correct cleaning logic
     const ingredientsFromImage = text
         .toLowerCase()
-        .split(/\s+/) // Split by any whitespace (spaces, newlines, etc.)
-        .map(word => word.replace(/[.,()"\[\]{}・「」、。]/g, '')) // Remove common punctuation from each word
-        .filter(word => word.length >= 2); // Keep words with 2 OR MORE characters
+        // Remove common punctuation and split into lines/words
+        .replace(/[.,()"\[\]{}・「」、。]/g, ' ')
+        .split(/\s+/) 
+        .filter(word => word.length > 0); // Keep all valid words
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
@@ -111,7 +118,6 @@ async function analyzeIngredients(text) {
         html = `<div class="result-box halal"><h2>✅ Halal</h2><p>Based on our database, no Haram or Doubtful ingredients were detected in the scanned text.</p></div>`;
     }
 
-    html += '<p class="disclaimer">Disclaimer: This tool is for guidance only and is not a substitute for official Halal certification. OCR accuracy may vary.</p>';
     resultsDiv.innerHTML = html;
     resultsDiv.scrollIntoView({ behavior: 'smooth' });
 }
