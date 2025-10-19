@@ -45,7 +45,6 @@ retakeButton.addEventListener('click', () => {
     debugContainer.classList.add('hidden'); 
 });
 
-// THIS IS THE NEW SCANNING LOGIC
 scanButton.addEventListener('click', () => {
     scanButton.disabled = true;
     retakeButton.disabled = true;
@@ -55,18 +54,13 @@ scanButton.addEventListener('click', () => {
     statusMessage.textContent = 'Uploading image...';
     progressBar.style.width = '25%';
 
-    // Convert the image on the canvas to a format we can send
     const imageDataUrl = canvas.toDataURL('image/jpeg');
-
-    // Prepare the data to send to the server
     const formData = new FormData();
     formData.append('apikey', API_KEY);
     formData.append('base64Image', imageDataUrl);
-    formData.append('language', 'jpn'); // We prioritize Japanese
-    formData.append('detectOrientation', 'true'); // Helps with rotated text
-    formData.append('scale', 'true'); // Helps with image quality
+    formData.append('language', 'jpn');
+    formData.append('isOverlayRequired', false); // No need for overlay
 
-    // Send the image to the OCR.space server
     fetch('https://api.ocr.space/parse/image', {
         method: 'POST',
         body: formData
@@ -75,7 +69,6 @@ scanButton.addEventListener('click', () => {
     .then(data => {
         statusMessage.textContent = 'Analyzing text...';
         progressBar.style.width = '75%';
-        // Extract the clean text from the server's response
         const recognizedText = data.ParsedResults[0]?.ParsedText || 'No text recognized.';
         analyzeIngredients(recognizedText);
     })
@@ -90,7 +83,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (This function remains the same) ---
+// --- 3. Analyze the Ingredients (UPGRADED LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -104,16 +97,34 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
 
-    const ingredientsFromImage = text.toLowerCase().replace(/[.,()"\[\]{}・「」、。]/g, ' ').split(/\s+/).filter(word => word.length > 0);
+    // Prepare the text for searching
+    const cleanedText = text.toLowerCase().replace(/[.,()\[\]{}・「」、。]/g, ' ').replace(/\s+/g, '');
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
-    const allHaram = [...db.haram_en, ...db.haram_jp];
-    const allMushbooh = [...db.mushbooh_en, ...db.mushbooh_jp];
     
-    ingredientsFromImage.forEach(ingredient => {
-        if (allHaram.includes(ingredient)) { foundHaram.add(ingredient); }
-        if (allMushbooh.includes(ingredient)) { foundMushbooh.add(ingredient); }
+    // Function to search for ingredients
+    const findMatches = (list, resultSet) => {
+        list.forEach(item => {
+            // Check for the item with and without spaces
+            const itemWithSpace = item.toLowerCase();
+            const itemWithoutSpace = itemWithSpace.replace(/\s+/g, '');
+            if (cleanedText.includes(itemWithoutSpace)) {
+                resultSet.add(itemWithSpace);
+            }
+        });
+    };
+
+    // Search for Haram and Mushbooh ingredients
+    findMatches([...db.haram_en, ...db.haram_jp], foundHaram);
+    findMatches([...db.mushbooh_en, ...db.mushbooh_jp], foundMushbooh);
+    
+    // Because we flag all meat as Haram, if we find a Mushbooh meat term, move it to Haram
+    foundMushbooh.forEach(item => {
+        if (db.haram_en.includes(item) || db.haram_jp.includes(item)) {
+            foundHaram.add(item);
+            foundMushbooh.delete(item);
+        }
     });
 
     let html = '';
