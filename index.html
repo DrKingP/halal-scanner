@@ -10,32 +10,33 @@
     <h1>Halal Ingredient Scanner</h1>
     <p>Point your camera at an ingredients list.</p>
     
-    <div id="scanner-container">
-        <video id="video" autoplay playsinline></video>
-        <canvas id="canvas" class="hidden"></canvas>
-    </div>
-    
-    <div id="language-selector">
-        <label><input type="radio" name="language" value="eng" checked> English</label>
-        <label><input type="radio" name="language" value="jpn"> 日本語 (Japanese)</label>
-    </div>
+    <div class="main-container">
+        <div class="left-column">
+            <div id="scanner-container">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas" class="hidden"></canvas>
+            </div>
+            <div id="status-container" class="hidden">
+                <p id="status-message">Initializing...</p>
+                <div class="progress-bar-container">
+                    <div id="progress-bar"></div>
+                </div>
+            </div>
+            <div id="results"></div>
+        </div>
 
-    <button id="captureButton">Capture Image</button>
-
-    <div id="actions-container" class="hidden">
-        <button id="scanButton">Scan This Image</button>
-        <button id="retakeButton">Retake</button>
-    </div>
-    
-    <div id="status-container" class="hidden">
-        <p id="status-message">Initializing...</p>
-        <div class="progress-bar-container">
-            <div id="progress-bar"></div>
+        <div class="right-column">
+            <div id="language-selector">
+                <label><input type="radio" name="language" value="eng" checked> English</label>
+                <label><input type="radio" name="language" value="jpn"> 日本語 (Japanese)</label>
+            </div>
+            <button id="captureButton">Capture Image</button>
+            <div id="actions-container" class="hidden">
+                <button id="scanButton">Scan This Image</button>
+                <button id="retakeButton">Retake</button>
+            </div>
         </div>
     </div>
-    
-    <div id="results">
-        </div>
 
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <script src="app.js"></script>

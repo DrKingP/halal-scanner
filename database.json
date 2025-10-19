@@ -1,16 +1,15 @@
 {
   "haram_en": [
+    "pork",
+    "bacon",
+    "ham",
+    "lard",
     "gelatin",
     "carmine",
     "cochineal",
-    "lard",
-    "bacon",
     "pepsin",
     "alcohol",
-    "shellac",
-    "pork",
-    "chicken",
-    "beef"
+    "shellac"
   ],
   "mushbooh_en": [
     "glycerin",
@@ -23,16 +22,15 @@
     "disodium inosinate"
   ],
   "haram_jp": [
+    "豚肉",
+    "ポーク",
     "ゼラチン",
     "ラード",
     "酒精",
     "アルコール",
     "ペプシン",
     "コチニール",
-    "カルミン",
-    "豚肉",
-    "牛肉",
-    "鶏肉"
+    "カルミン"
   ],
   "mushbooh_jp": [
     "グリセリン",
