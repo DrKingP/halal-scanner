@@ -10,7 +10,6 @@ const context = canvas.getContext('2d');
 const statusContainer = document.getElementById('status-container');
 const statusMessage = document.getElementById('status-message');
 const progressBar = document.getElementById('progress-bar');
-// NEW: Debug container
 const debugContainer = document.getElementById('debug-container');
 
 // --- 1. Start the Camera ---
@@ -44,7 +43,7 @@ retakeButton.addEventListener('click', () => {
     captureButton.classList.remove('hidden');
     resultsDiv.innerHTML = '';
     statusContainer.classList.add('hidden');
-    debugContainer.classList.add('hidden'); // Hide debug on retake
+    debugContainer.classList.add('hidden'); 
 });
 
 scanButton.addEventListener('click', () => {
@@ -76,22 +75,16 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL CORRECTED LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL LOGIC) ---
 async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
 
-    // Show the raw OCR output for debugging
-    debugContainer.classList.remove('hidden');
-    debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
-    
-    // Final, correct cleaning logic
     const ingredientsFromImage = text
         .toLowerCase()
-        // Remove common punctuation and split into lines/words
         .replace(/[.,()"\[\]{}・「」、。]/g, ' ')
         .split(/\s+/) 
-        .filter(word => word.length > 0); // Keep all valid words
+        .filter(word => word.length > 0);
 
     let foundHaram = new Set();
     let foundMushbooh = new Set();
@@ -109,15 +102,19 @@ async function analyzeIngredients(text) {
 
     let html = '';
     if (foundHaram.size > 0) {
-        html = `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p><h3>Haram Ingredients:</h3><p class="ingredient-list">${[...foundHaram].join(', ')}</p>`;
-        if (foundMushbooh.size > 0) { html += `<h3>Doubtful Ingredients Also Found:</h3><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p>`; }
-        html += '</div>';
+        html = `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p><h3>Haram Ingredients:</h3><p class="ingredient-list">${[...foundHaram].join(', ')}</p></div>`;
     } else if (foundMushbooh.size > 0) {
         html = `<div class="result-box mushbooh"><h2>🟡 Doubtful (Mushbooh)</h2><p>This product is Doubtful. The source of the following ingredients should be verified:</p><h3>Doubtful Ingredients:</h3><p class="ingredient-list">${[...foundMushbooh].join(', ')}</p></div>`;
     } else {
-        html = `<div class="result-box halal"><h2>✅ Halal</h2><p>Based on our database, no Haram or Doubtful ingredients were detected in the scanned text.</p></div>`;
+        html = `<div class="result-box halal"><h2>✅ Halal</h2><p>Based on our database, no Haram or Doubtful ingredients were detected.</p></div>`;
     }
 
     resultsDiv.innerHTML = html;
+
+    // 👇 ALWAYS SHOW THE DEBUG BOX WITH THE RESULT 👇
+    debugContainer.classList.remove('hidden');
+    debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
+    
+    // Scroll to the main result, not the debug box
     resultsDiv.scrollIntoView({ behavior: 'smooth' });
 }
