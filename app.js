@@ -20,8 +20,8 @@ navigator.mediaDevices.getUserMedia({
     video.play();
 })
 .catch(function(err) {
-    console.log("An error occurred: " + err);
-    resultsDiv.innerHTML = `<div class="result-box error"><h2>Camera Error</h2><p>Could not access the camera. Please make sure you have granted permission.</p></div>`;
+    console.error("Camera Error:", err);
+    resultsDiv.innerHTML = `<div class="result-box error"><h2>Camera Error</h2><p>Could not access the camera. Please check browser and system permissions.</p></div>`;
 });
 
 // --- 2. WORKFLOW ---
@@ -44,34 +44,35 @@ retakeButton.addEventListener('click', () => {
     statusContainer.classList.add('hidden');
 });
 
-scanButton.addEventListener('click', () => {
+scanButton.addEventListener('click', async () => {
     scanButton.disabled = true;
     retakeButton.disabled = true;
     resultsDiv.innerHTML = '';
     statusContainer.classList.remove('hidden');
     progressBar.style.width = '0%';
     
-    const selectedLanguage = document.querySelector('input[name="language"]:checked').value;
+    try {
+        statusMessage.textContent = 'Scanning for English...';
+        const engResult = await Tesseract.recognize(canvas, 'eng');
+        progressBar.style.width = '50%';
+        
+        statusMessage.textContent = 'Scanning for Japanese...';
+        const jpnResult = await Tesseract.recognize(canvas, 'jpn');
+        progressBar.style.width = '100%';
 
-    Tesseract.recognize(
-        canvas,
-        selectedLanguage,
-        { logger: m => {
-            statusMessage.textContent = `${m.status.replace(/_/g, ' ')}...`;
-            if (m.status === 'recognizing text') {
-                progressBar.style.width = `${m.progress * 100}%`;
-            }
-        }}
-    ).then(({ data: { text } }) => {
-        analyzeIngredients(text);
-    }).catch(err => {
+        // Combine text from both scans
+        const combinedText = `${engResult.data.text} ${jpnResult.data.text}`;
+        
+        analyzeIngredients(combinedText);
+
+    } catch (err) {
         console.error(err);
         resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>Could not read the text. Please try again with a clearer image.</p></div>`;
-    }).finally(() => {
+    } finally {
         scanButton.disabled = false;
         retakeButton.disabled = false;
         statusContainer.classList.add('hidden');
-    });
+    }
 });
 
 // --- 3. Analyze the Ingredients ---
@@ -79,18 +80,21 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
     
-    const ingredientsFromImage = text.toLowerCase().replace(/[^a-z0-9\s]/gi, ' ').split(/\s+/);
-    
+    // Improved cleaning: handles multiple lines and extra spaces
+    const ingredientsFromImage = text
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/gi, ' ') // Remove all non-alphanumeric chars
+        .split(/\s+/) // Split by any amount of whitespace
+        .filter(word => word.length > 1); // Remove empty strings and single letters
+
     let foundHaram = new Set();
     let foundMushbooh = new Set();
     const allHaram = [...db.haram_en, ...db.haram_jp];
     const allMushbooh = [...db.mushbooh_en, ...db.mushbooh_jp];
     
     ingredientsFromImage.forEach(ingredient => {
-        if (ingredient.length > 1) { // Ignore single letters
-            if (allHaram.includes(ingredient)) { foundHaram.add(ingredient); }
-            if (allMushbooh.includes(ingredient)) { foundMushbooh.add(ingredient); }
-        }
+        if (allHaram.includes(ingredient)) { foundHaram.add(ingredient); }
+        if (allMushbooh.includes(ingredient)) { foundMushbooh.add(ingredient); }
     });
 
     let html = '';
