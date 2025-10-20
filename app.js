@@ -174,7 +174,6 @@ async function analyzeIngredients(text) {
     const groupResults = (matchesMap) => {
         const resultMap = {};
         matchesMap.forEach((ingredient, alias) => {
-            // Re-find the original alias casing for display
             const originalAlias = ingredient.aliases.find(a => a.toLowerCase() === alias) || alias;
             if (!resultMap[ingredient.name]) {
                 resultMap[ingredient.name] = new Set();
