@@ -162,7 +162,7 @@ function levenshtein(s1, s2) {
     return costs[s2.length];
 }
 
-// --- 6. Analyze the Ingredients (with precise display logic) ---
+// --- 6. Analyze the Ingredients ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -179,6 +179,7 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
+    // --- UPDATED to use Fuzzy Matching ---
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
@@ -186,18 +187,24 @@ async function analyzeIngredients(text) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                 if (cleanedAlias.length < 3) continue;
 
+                // First, check for a direct, exact match (fastest)
                 if (searchableText.includes(cleanedAlias)) {
-                    matches.set(alias, ingredient);
-                    continue;
+                    matches.set(alias.toLowerCase(), ingredient);
+                    continue; // Found it, move to the next alias
                 }
 
+                // If no direct match, try fuzzy matching for aliases of 4+ chars
                 if (cleanedAlias.length < 4) continue;
-                const tolerance = cleanedAlias.length > 7 ? 2 : 1;
+                
+                // Set a tolerance for errors (e.g., 1 error for short words, 2 for longer)
+                const tolerance = cleanedAlias.length > 7 ? 2 : 1; 
+
+                // Check all substrings of the searchable text
                 for (let i = 0; i <= searchableText.length - cleanedAlias.length; i++) {
-                    const substring = searchableText.substring(i, i + cleanedAlias.length + tolerance - 1);
+                    const substring = searchableText.substring(i, i + cleanedAlias.length + tolerance -1);
                     if (levenshtein(substring, cleanedAlias) <= tolerance) {
-                        matches.set(alias, ingredient);
-                        break;
+                        matches.set(alias.toLowerCase(), ingredient);
+                        break; // Found a fuzzy match, stop checking this alias
                     }
                 }
             }
@@ -209,32 +216,28 @@ async function analyzeIngredients(text) {
     let mushboohMatchesMap = findRawMatches(db.mushbooh);
 
     const exceptionsToRemove = new Set();
-    
-    // ** THE FIX IS HERE: Replaced forEach with a standard for...of loop **
-    for (const [foundAlias, ingredient] of mushboohMatchesMap.entries()) {
-        for (const aliasToCheck of ingredient.aliases) {
-            const exceptions = db.halal_exceptions[aliasToCheck.toLowerCase()];
-            if (exceptions) {
-                for (const exceptionPhrase of exceptions) {
-                    const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                    if (searchableText.includes(cleanedException)) {
-                        exceptionsToRemove.add(foundAlias);
-                        break; 
-                    }
+    mushboohMatchesMap.forEach((ingredient, alias) => {
+        const exceptions = db.halal_exceptions[alias];
+        if (exceptions) {
+            for (const exceptionPhrase of exceptions) {
+                const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
+                if (searchableText.includes(cleanedException)) {
+                    exceptionsToRemove.add(alias);
+                    break;
                 }
             }
-            if (exceptionsToRemove.has(foundAlias)) break;
         }
-    }
+    });
     exceptionsToRemove.forEach(alias => mushboohMatchesMap.delete(alias));
 
     const groupResults = (matchesMap) => {
         const resultMap = {};
-        matchesMap.forEach((ingredient, foundAlias) => {
+        matchesMap.forEach((ingredient, alias) => {
+            const originalAlias = ingredient.aliases.find(a => a.toLowerCase() === alias) || alias;
             if (!resultMap[ingredient.name]) {
                 resultMap[ingredient.name] = new Set();
             }
-            resultMap[ingredient.name].add(foundAlias);
+            resultMap[ingredient.name].add(originalAlias);
         });
         return resultMap;
     };
