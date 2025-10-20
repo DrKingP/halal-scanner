@@ -188,7 +188,7 @@ async function analyzeIngredients(text) {
 
     // FINAL REDUNDANCY FIX: If a specific term is found, remove its general parent from the same category
     for (const category in foundMushbooh) {
-        const specificTerms = [...foundMushbooh[category]].filter(t => t.length > 3);
+        const specificTerms = [...foundMushbooh[category]].filter(t => t.length > 3); // A simple heuristic
         specificTerms.forEach(specific => {
             [...foundMushbooh[category]].forEach(general => {
                 if (specific.toLowerCase() !== general.toLowerCase() && specific.toLowerCase().includes(general.toLowerCase())) {
