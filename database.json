@@ -5,7 +5,7 @@
     { "name": "Gelatin / Collagen (Unknown Source)", "aliases": ["gelatin", "jello", "collagen", "ゼラチン", "コラーゲン"] },
     { "name": "Alcohol & Intoxicants", "aliases": ["alcohol", "ethanol", "ethyl alcohol", "wine", "beer", "liquor", "spirits", "brandy", "cognac", "whiskey", "rum", "sake", "mirin", "酒精", "アルコール", "酒", "洋酒", "ワイン", "ビール", "日本酒", "みりん", "味醂", "リキュール", "ラム酒", "ブランディ", "ウィスキー"] },
     { "name": "Blood", "aliases": ["blood", "blood plasma", "血", "血漿"] },
-    { "name": "Carmine / Cochineal (E120)", "aliases": ["carmine", "cochineal", "e120", "コチニール", "カルミン", "ラック色素"] },
+    { "name": "Carmine / Cochineal (E120)", "aliases": ["carmine", "cochineal", "cochineal extract", "e120", "コチニール", "カルミン", "ラック色素", "コチニール抽出物"] },
     { "name": "Pepsin", "aliases": ["pepsin", "ペプシン"] },
     { "name": "Shellac (E904)", "aliases": ["shellac", "glaze", "e904", "セラック"] }
   ],
@@ -23,7 +23,10 @@
     { "name": "Casein / Caseinates", "aliases": ["casein", "caseinates", "sodium caseinate", "calcium caseinate", "カゼイン", "カゼインナトリウム", "カゼインna"] },
     { "name": "Yeast Extract (unknown source)", "aliases": ["yeast extract", "autolyzed yeast", "酵母エキス", "自家製酵母"] },
     { "name": "Flavorings (unknown source)", "aliases": ["natural flavors", "artificial flavors", "flavoring", "香料", "天然香料", "人工香料", "調味料（アミノ酸等）"] },
-    { "name": "Lecithin (E322)", "aliases": ["lecithin", "lecithins", "e322", "soy lecithin", "レシチン", "大豆レシチン"] }
+    { "name": "Lecithin (E322)", "aliases": ["lecithin", "lecithins", "e322", "soy lecithin", "レシチン", "大豆レシチン"] },
+    { "name": "Carrageenan", "aliases": ["carrageenan", "カラギーナン"] },
+    { "name": "Locust Bean Gum", "aliases": ["locust bean gum", "ローカストビーンガム"] },
+    { "name": "Gellan Gum", "aliases": ["gellan gum", "ジェランガム"] }
   ],
   "halal_exceptions": {
     "emulsifier": ["emulsifier (derived from soy)", "emulsifier (from soy)", "emulsifier (soy)"],
