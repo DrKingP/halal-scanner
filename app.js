@@ -78,7 +78,6 @@ retakeButton.addEventListener('click', () => {
     debugContainer.classList.add('hidden'); 
 });
 
-// --- UPDATED to use Tesseract.js ---
 scanButton.addEventListener('click', async () => {
     scanButton.disabled = true;
     retakeButton.disabled = true;
@@ -179,29 +178,32 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
+    // --- UPDATED FUZZY MATCHING LOGIC ---
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                if (cleanedAlias.length < 2) continue; // Changed to 2 to catch things like 牛
+                if (cleanedAlias.length < 2) continue;
 
-                // ADD THIS LINE FOR DEBUGGING
-                console.log(`Checking for alias: '${cleanedAlias}'`);
-
-                if (searchableText.includes(cleanedAlias)) {
-                    matches.set(alias.toLowerCase(), ingredient);
-                    continue; 
+                // New logic: Set a more forgiving tolerance based on the alias length
+                // This helps catch OCR errors in short but important words like 豚肉 or 牛肉
+                let tolerance = 0;
+                if (cleanedAlias.length >= 2 && cleanedAlias.length <= 4) {
+                    tolerance = 1; // Allows one error for short words (e.g., "豚肉", "beef")
+                } else if (cleanedAlias.length >= 5 && cleanedAlias.length <= 9) {
+                    tolerance = 2; // Allows two errors for medium words
+                } else if (cleanedAlias.length > 9) {
+                    tolerance = 3; // Allows three errors for long words
                 }
-                
-                const tolerance = cleanedAlias.length < 5 ? 0 : (cleanedAlias.length < 8 ? 1 : 2);
-                if (tolerance === 0) continue; 
 
+                // We no longer need the separate 'includes' check.
+                // Levenshtein with a tolerance of 0 is an exact match anyway.
                 for (let i = 0; i <= searchableText.length - cleanedAlias.length; i++) {
                     const substring = searchableText.substring(i, i + cleanedAlias.length);
                     if (levenshtein(substring, cleanedAlias) <= tolerance) {
                         matches.set(alias.toLowerCase(), ingredient);
-                        break; 
+                        break; // Found a match, move to the next alias
                     }
                 }
             }
