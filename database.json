@@ -11,7 +11,7 @@
   ],
   "mushbooh": [
     { "name": "Shortening / Fats of unknown origin", "aliases": ["shortening", "fat", "fat spread", "油脂", "ファットスプレッド", "ショートニング"] },
-    { "name": "Emulsifiers (e.g., Mono/Diglycerides)", "aliases": ["emulsifier", "diglyceride", "mono and diglycerides", "monoglyceride", "e471", "e472", "e477", "乳化剤", "ジグリセриド", "モノグリセриド"] },
+    { "name": "Emulsifiers (e.g., Mono/Diglycerides)", "aliases": ["emulsifier", "diglyceride", "mono and diglycerides", "monoglyceride", "e471", "e472", "e477", "乳化剤", "ジグリセリド", "モノグリセリド"] },
     { "name": "Whey", "aliases": ["whey", "whey protein concentrate", "reduced mineral whey", "ホエイ", "ホエイプロテインコンセントレート", "還元ホエイ"] },
     { "name": "Rennet / Renin", "aliases": ["rennet", "rennin", "レンネット", "レンニン"] },
     { "name": "Soy Sauce", "aliases": ["soy sauce", "醤油", "しょうゆ"] },
@@ -26,10 +26,11 @@
     { "name": "Lecithin (E322)", "aliases": ["lecithin", "lecithins", "e322", "soy lecithin", "レシチン", "大豆レシチン"] }
   ],
   "halal_exceptions": {
-    "shortening": ["vegetable shortening"],
+    "emulsifier": ["emulsifier (derived from soy)", "emulsifier (soy)"],
+    "乳化剤": ["乳化剤（大豆由来）"],
     "fat": ["vegetable fat"],
-    "emulsifier": ["emulsifier (derived from soy)", "emulsifier (soy)", "乳化剤（大豆由来）"],
     "油脂": ["植物油脂"],
+    "shortening": ["vegetable shortening"],
     "ショートニング": ["植物性ショートニング"]
   }
 }
