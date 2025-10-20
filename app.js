@@ -136,7 +136,33 @@ function normalizeJapaneseText(text) {
                .replace(/しゆ/g, 'しゅ');
 }
 
-// --- 5. Analyze the Ingredients ---
+// --- 5. Levenshtein Distance function for fuzzy matching ---
+function levenshtein(s1, s2) {
+    s1 = s1.toLowerCase();
+    s2 = s2.toLowerCase();
+    const costs = [];
+    for (let i = 0; i <= s1.length; i++) {
+        let lastValue = i;
+        for (let j = 0; j <= s2.length; j++) {
+            if (i === 0) {
+                costs[j] = j;
+            } else {
+                if (j > 0) {
+                    let newValue = costs[j - 1];
+                    if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+                        newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                    }
+                    costs[j - 1] = lastValue;
+                    lastValue = newValue;
+                }
+            }
+        }
+        if (i > 0) costs[s2.length] = lastValue;
+    }
+    return costs[s2.length];
+}
+
+// --- 6. Analyze the Ingredients ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -153,15 +179,33 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // --- REVERTED AND FINALIZED MATCHING LOGIC ---
+    // --- UPDATED to use Fuzzy Matching ---
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                // Simple .includes() is the most reliable method here.
-                if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
+                if (cleanedAlias.length < 3) continue;
+
+                // First, check for a direct, exact match (fastest)
+                if (searchableText.includes(cleanedAlias)) {
                     matches.set(alias.toLowerCase(), ingredient);
+                    continue; // Found it, move to the next alias
+                }
+
+                // If no direct match, try fuzzy matching for aliases of 4+ chars
+                if (cleanedAlias.length < 4) continue;
+                
+                // Set a tolerance for errors (e.g., 1 error for short words, 2 for longer)
+                const tolerance = cleanedAlias.length > 7 ? 2 : 1; 
+
+                // Check all substrings of the searchable text
+                for (let i = 0; i <= searchableText.length - cleanedAlias.length; i++) {
+                    const substring = searchableText.substring(i, i + cleanedAlias.length + tolerance -1);
+                    if (levenshtein(substring, cleanedAlias) <= tolerance) {
+                        matches.set(alias.toLowerCase(), ingredient);
+                        break; // Found a fuzzy match, stop checking this alias
+                    }
                 }
             }
         });
