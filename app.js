@@ -102,8 +102,9 @@ scanButton.addEventListener('click', () => {
     .then(data => {
         statusMessage.textContent = 'Analyzing text...';
         progressBar.style.width = '75%';
-        const recognizedText = data.ParsedResults[0]?.ParsedText || 'No text recognized.';
-        analyzeIngredients(recognizedText);
+        const rawText = data.ParsedResults[0]?.ParsedText || 'No text recognized.';
+        const processedText = preprocessOcrText(rawText); // Pre-process the text
+        analyzeIngredients(processedText); // Analyze the cleaned text
     })
     .catch(err => {
         console.error(err);
@@ -120,7 +121,17 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL, BULLETPROOF LOGIC WITH PARTIAL MATCHING) ---
+// --- 3. Pre-process the OCR text to fix broken words ---
+function preprocessOcrText(text) {
+    if (!text) return '';
+    // This regex looks for a letter (Japanese or English) followed by a newline, 
+    // and then another letter. It removes the newline between them.
+    const regex = /([a-zA-Z\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF])\n([a-zA-Z\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF])/g;
+    // For example: "しょ\nうゆ" becomes "しょうゆ"
+    return text.replace(regex, '$1$2');
+}
+
+// --- 4. Analyze the Ingredients ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -137,24 +148,14 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // STEP 1: Find all potential aliases that exist in the text, including partial matches
+    // STEP 1: Find all potential aliases that exist in the text (Simplified Logic)
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                if (cleanedAlias.length < 3) continue;
-
-                // Check for a full match first (most reliable)
-                if (searchableText.includes(cleanedAlias)) {
+                if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
                     matches.set(alias.toLowerCase(), ingredient);
-                    continue;
-                }
-                
-                // If no full match, check for reliable partial matches
-                // Does the searchable text contain a word that STARTS WITH a long alias?
-                if (cleanedAlias.length >= 4 && searchableText.includes(cleanedAlias.substring(0, cleanedAlias.length - 1))) {
-                     matches.set(alias.toLowerCase(), ingredient);
                 }
             }
         });
