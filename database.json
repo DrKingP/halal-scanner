@@ -16,7 +16,7 @@
     { "name": "Rennet / Renin", "aliases": ["rennet", "rennin", "レンネット", "レンニン"] },
     { "name": "Soy Sauce", "aliases": ["soy sauce", "醤油", "しょうゆ", "粉末しょうゆ", "粉末醤油"] },
     { "name": "Margarine", "aliases": ["margarine", "マーガリン"] },
-    { "name": "Vitamins (unknown source)", "aliases": ["vitamins", "vitamin a", "vitamin d", "vitamin e", "vitamin c", "ビタミン", "ビタミンc", "V.C", "V.E"] },
+    { "name": "Vitamins (unknown source)", "aliases": ["vitamin", "vitamins", "ビタミン", "ビタミンc", "V.C", "V.E"] },
     { "name": "Glycerin / Glycerol (E422)", "aliases": ["glycerin", "glycerol", "e422", "グリセリン", "グリセロール"] },
     { "name": "Enzymes (unknown source)", "aliases": ["enzymes", "lipase", "protease", "amylase", "酵素", "リパーゼ", "プロテアーゼ", "アミラーゼ"] },
     { "name": "L-Cysteine (E920)", "aliases": ["cysteine", "l-cysteine", "e920", "システイン", "l-システイン"] },

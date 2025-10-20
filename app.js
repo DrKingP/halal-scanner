@@ -179,7 +179,7 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // --- UPDATED to use Fuzzy Matching ---
+    // --- UPDATED FUZZY MATCHING LOGIC ---
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
@@ -193,15 +193,16 @@ async function analyzeIngredients(text) {
                     continue; // Found it, move to the next alias
                 }
 
-                // If no direct match, try fuzzy matching for aliases of 4+ chars
-                if (cleanedAlias.length < 4) continue;
+                // If no direct match, try fuzzy matching with stricter rules
                 
-                // Set a tolerance for errors (e.g., 1 error for short words, 2 for longer)
-                const tolerance = cleanedAlias.length > 7 ? 2 : 1; 
+                // NEW: Stricter tolerance. Short words (len < 5) must be an exact match (tolerance 0).
+                // This prevents "beer" from matching "berr" in "cranberries".
+                const tolerance = cleanedAlias.length < 5 ? 0 : (cleanedAlias.length < 8 ? 1 : 2);
+                if (tolerance === 0) continue; // Already failed exact match above
 
                 // Check all substrings of the searchable text
                 for (let i = 0; i <= searchableText.length - cleanedAlias.length; i++) {
-                    const substring = searchableText.substring(i, i + cleanedAlias.length + tolerance -1);
+                    const substring = searchableText.substring(i, i + cleanedAlias.length);
                     if (levenshtein(substring, cleanedAlias) <= tolerance) {
                         matches.set(alias.toLowerCase(), ingredient);
                         break; // Found a fuzzy match, stop checking this alias
