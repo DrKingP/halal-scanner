@@ -4,48 +4,30 @@ body {
     color: #333;
     text-align: center;
     margin: 0;
-    /* Reduced padding-bottom for fixed footer space */
-    padding-bottom:0; 
-    padding-top: 0; 
-}
-
-/* FIX: Reduce top spacing and consolidate header elements */
-.app-header {
-    padding: 5px 5px 5px 5px; /* Reduced padding */
-    margin-bottom: 5px;
+    padding: 20px;
 }
 
 h1 {
     color: #006400;
-    margin-top: 0;
-    margin-bottom: 1px; /* Reduced space below title */
-}
-.app-header p {
-    margin-top: 0; /* Reduced space above guidance text */
 }
 
 /* Flexbox container for the two columns */
 .main-container {
     display: flex;
-    flex-wrap: wrap; 
+    flex-wrap: wrap; /* Allows columns to wrap on small screens */
     justify-content: center;
     gap: 20px;
     max-width: 1000px;
-    /* FIX: Reduce margin to shrink space above camera */
-    margin: 5px auto 20px auto; 
+    margin: 20px auto;
 }
 
-/* On mobile, only the left-column (scanner/results) should appear tall. */
-.left-column {
-    flex: 1; 
-    min-width: 300px; 
+.left-column, .right-column {
+    flex: 1; /* Each column takes up equal space */
+    min-width: 300px; /* Minimum width before wrapping */
     padding: 15px;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.right-column {
-    display: none; 
 }
 
 #scanner-container {
@@ -54,66 +36,30 @@ h1 {
     border: 3px solid #ccc;
     border-radius: 8px;
     overflow: hidden;
-    /* FIX: Max-height is 300px and fixed aspect ratio */
-    max-height: 200px; 
-    aspect-ratio: 1 / 1; 
 }
 
 #video, #canvas {
     width: 100%;
-    height: 100%; 
-    object-fit: cover; 
     display: block;
 }
 
-/* NEW: Wrapper for initial buttons (Capture/Upload) */
-#initial-buttons-wrapper {
-    width: 100%; 
-    max-width: 400px;
-    margin: 10px auto; 
-    padding: 0 20px;
-    box-sizing: border-box;
-}
-#initial-buttons-wrapper button {
-    margin: 5px 0; 
-}
-
-/* --- FIXED FOOTER STYLES (Scan/Retake buttons) --- */
-#fixed-actions-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: white; 
-    padding: 10px 20px;
-    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-    z-index: 100;
-    box-sizing: border-box;
-}
-
-/* Make buttons fill the fixed footer */
-#fixed-actions-footer button {
-    margin: 5px 0;
-}
-/* END FIXED FOOTER STYLES */
-
-/* Primary button styles */
 #captureButton, #uploadButton, #scanButton, #retakeButton {
     display: block;
     width: 100%;
-    padding: 20px 10px;
+    padding: 15px;
     font-size: 18px;
     font-weight: bold;
     color: white;
     border: none;
     border-radius: 8px;
+    margin: 10px 0;
     cursor: pointer;
-    box-sizing: border-box;
 }
 
 #captureButton, #scanButton { background-color: #28a745; }
 #captureButton:active, #scanButton:active { background-color: #218838; }
 
+/* Style for the new upload button */
 #uploadButton { background-color: #007bff; }
 #uploadButton:active { background-color: #0056b3; }
 
@@ -137,34 +83,31 @@ h1 {
 #progress-bar { width: 0%; height: 100%; background-color: #28a745; border-radius: 5px; transition: width 0.2s ease-in-out; }
 #status-message { margin: 0 0 10px 0; font-weight: bold; text-transform: capitalize; text-align: left; }
 
-/* FIX: Ensure disclaimer text is not adding excess space */
-.disclaimer { 
-    font-size: 12px; 
-    color: #6c757d; 
-    margin: 15px 0 0 0; 
-    text-align: center;
-    padding: 5px 0;
-    border-top: 1px solid #ccc;
-}
-/* FIX: Remove default debug box styling to prevent it from consuming space when visible */
 #debug-container {
-    margin: 0;
-    padding: 0;
-    background-color: transparent;
-    border: none;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
     font-family: monospace;
     text-align: left;
 }
+#debug-container h3 {
+    margin-top: 0;
+    font-size: 14px;
+    color: #6c757d;
+}
+#debug-container pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: #212529;
+}
 
+.disclaimer { font-size: 12px; color: grey; margin-top: 15px; }
 
 /* Media query for mobile devices */
 @media (max-width: 600px) {
-    /* Ensure columns stack vertically on mobile */
-    .left-column {
-        flex: 1 1 100%; 
-        padding: 10px;
-    }
-    .right-column {
-        display: none; 
-    }
+  #scanner-container {
+    max-height: 40vh;
+  }
 }
