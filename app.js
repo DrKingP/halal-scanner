@@ -137,14 +137,14 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // STEP 1: Find all potential aliases that exist in the text
+    // STEP 1: Find all potential aliases that exist in the text, regardless of exceptions
     const findRawMatches = (list) => {
-        const matches = new Set();
+        const matches = new Map(); // Using a Map to store {alias -> ingredient object}
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                 if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
-                    matches.add(alias.toLowerCase());
+                    matches.set(alias.toLowerCase(), ingredient);
                 }
             }
         });
@@ -156,7 +156,7 @@ async function analyzeIngredients(text) {
 
     // STEP 2: Filter out exceptions from the Mushbooh list
     const exceptionsToRemove = new Set();
-    mushboohMatches.forEach(alias => {
+    mushboohMatches.forEach((ingredient, alias) => {
         const exceptions = db.halal_exceptions[alias];
         if (exceptions) {
             for (const exceptionPhrase of exceptions) {
@@ -171,23 +171,19 @@ async function analyzeIngredients(text) {
     exceptionsToRemove.forEach(alias => mushboohMatches.delete(alias));
 
     // STEP 3: Group the final, filtered aliases by their category for display
-    const groupResults = (matches, list) => {
+    const groupResults = (matchesMap) => {
         const resultMap = {};
-        list.forEach(ingredient => {
-            for (const alias of ingredient.aliases) {
-                if (matches.has(alias.toLowerCase())) {
-                    if (!resultMap[ingredient.name]) {
-                        resultMap[ingredient.name] = new Set();
-                    }
-                    resultMap[ingredient.name].add(alias);
-                }
+        matchesMap.forEach((ingredient, alias) => {
+            if (!resultMap[ingredient.name]) {
+                resultMap[ingredient.name] = new Set();
             }
+            resultMap[ingredient.name].add(alias);
         });
         return resultMap;
     };
 
-    let foundHaram = groupResults(haramMatches, db.haram);
-    let foundMushbooh = groupResults(mushboohMatches, db.mushbooh);
+    let foundHaram = groupResults(haramMatches);
+    let foundMushbooh = groupResults(mushboohMatches);
 
     for (const category in foundHaram) {
         delete foundMushbooh[category];
