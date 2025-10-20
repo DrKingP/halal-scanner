@@ -197,7 +197,8 @@ async function analyzeIngredients(text) {
                     const substring = searchableText.substring(i, i + cleanedAlias.length + tolerance - 1);
                     if (levenshtein(substring, cleanedAlias) <= tolerance) {
                         matches.set(alias, ingredient);
-                        break;
+                        // ** THE FIX IS HERE: Changed 'break' to 'continue' **
+                        continue; 
                     }
                 }
             }
@@ -238,8 +239,6 @@ async function analyzeIngredients(text) {
     let foundHaram = groupResults(haramMatchesMap);
     let foundMushbooh = groupResults(mushboohMatchesMap);
 
-    // ** THE FIX IS HERE: The faulty cleanRedundancies function has been removed. **
-
     for (const category in foundHaram) {
         delete foundMushbooh[category];
     }
@@ -261,7 +260,7 @@ async function analyzeIngredients(text) {
     }
     
     if (mushboohCategories.length > 0) {
-        const marginTop = haramCategories.length > 0 ? 'style="margin--top: 15px;"' : '';
+        const marginTop = haramCategories.length > 0 ? 'style="margin-top: 15px;"' : '';
         const title = haramCategories.length > 0 ? '<h3>🟡 Doubtful Ingredients Also Found:</h3>' : '<h2>🟡 Doubtful (Mushbooh)</h2>';
         html += `<div class="result-box mushbooh" ${marginTop}>${title}<p>The source of the following ingredients should be verified:</p>${generateListHtml(foundMushbooh)}</div>`;
     }
