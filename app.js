@@ -186,14 +186,14 @@ async function analyzeIngredients(text) {
     let foundHaram = groupResults(haramMatchesMap);
     let foundMushbooh = groupResults(mushboohMatchesMap);
 
-    // FINAL REDUNDANCY FIX: If a specific term is found, remove its general parent from the same category
+    // Clean up redundancies (e.g., if "vitamin c" is found, remove "vitamin")
     const cleanRedundancies = (resultMap) => {
         for (const category in resultMap) {
             const aliases = [...resultMap[category]];
             const toRemove = new Set();
             for (const specific of aliases) {
                 for (const general of aliases) {
-                    if (specific !== general && specific.toLowerCase().includes(general.toLowerCase())) {
+                    if (specific.toLowerCase() !== general.toLowerCase() && specific.toLowerCase().includes(general.toLowerCase())) {
                         toRemove.add(general);
                     }
                 }
