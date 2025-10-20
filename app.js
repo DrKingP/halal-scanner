@@ -153,17 +153,14 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // --- UPDATED MATCHING LOGIC ---
+    // --- REVERTED AND FINALIZED MATCHING LOGIC ---
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                if (cleanedAlias.length < 2) continue;
-                
-                // Use a regular expression to find the alias as a whole word or at the start of a word
-                const regex = new RegExp(`\\b${cleanedAlias}`, 'g');
-                if (searchableText.match(regex)) {
+                // Simple .includes() is the most reliable method here.
+                if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
                     matches.set(alias.toLowerCase(), ingredient);
                 }
             }
