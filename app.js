@@ -137,7 +137,7 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // STEP 1: Find all potential matches that exist in the text, regardless of exceptions
+    // STEP 1: Find all potential aliases that exist in the text, regardless of exceptions
     const findRawMatches = (list) => {
         const matches = new Map(); // Using a Map to store { alias -> ingredient object }
         list.forEach(ingredient => {
