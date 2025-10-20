@@ -1,46 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Halal Ingredient Scanner</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halal Ingredient Scanner</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Halal Ingredient Scanner</h1>
-    <p>For best results, point your camera at a clear, <strong>printed</strong> ingredients list.</p>
-    
-    <div class="main-container">
-        <div class="left-column">
-            <div id="scanner-container">
-                <video id="video" autoplay playsinline></video>
-                <canvas id="canvas" class="hidden"></canvas>
-            </div>
-            <div id="status-container" class="hidden">
-                <p id="status-message">Initializing...</p>
-                <div class="progress-bar-container">
-                    <div id="progress-bar"></div>
-                </div>
-            </div>
-            <div id="results"></div>
-            <p class="disclaimer hidden" id="disclaimer-text">Disclaimer: This result is based on a database and automated OCR analysis. Always check for official Halal certification marks on the packaging.</p>
-            <div id="debug-container" class="hidden"></div>
-        </div>
+    <h1>Halal Ingredient Scanner</h1>
+    <p>For best results, point your camera at a clear, <strong>printed</strong> ingredients list.</p>
+    
+    <div class="main-container">
+        <div class="left-column">
+            <div id="scanner-container">
+                <div id="scan-target-overlay">
+                    <p>Align Ingredients Here</p>
+                </div>
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas" class="hidden"></canvas>
+            </div>
+            <div id="status-container" class="hidden">
+                <p id="status-message">Initializing...</p>
+                <div class="progress-bar-container">
+                    <div id="progress-bar"></div>
+                </div>
+            </div>
+            <div id="results"></div>
+            <p class="disclaimer hidden" id="disclaimer-text">Disclaimer: This result is based on a database and automated OCR analysis. Always check for official Halal certification marks on the packaging.</p>
+            <div id="debug-container" class="hidden"></div>
+        </div>
+    </div>
+    
+    <div id="mobile-action-bar">
+        <div id="initial-buttons">
+            <button id="captureButton">Capture Image</button>
+            <button id="uploadButton">Upload from Gallery</button>
+        </div>
+        <div id="actions-container" class="hidden">
+            <button id="scanButton">Scan This Image</button>
+            <button id="retakeButton">Start Over</button>
+        </div>
+    </div>
 
-        <div class="right-column">
-            <div id="initial-buttons">
-                <button id="captureButton">Capture Image</button>
-                <button id="uploadButton">Upload from Gallery</button>
-            </div>
-            <div id="actions-container" class="hidden">
-                <button id="scanButton">Scan This Image</button>
-                <button id="retakeButton">Start Over</button>
-            </div>
-        </div>
-    </div>
-    
-    <input type="file" id="uploadInput" class="hidden" accept="image/*">
+    <input type="file" id="uploadInput" class="hidden" accept="image/*">
 
-    <script src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>

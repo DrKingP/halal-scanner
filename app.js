@@ -115,7 +115,7 @@ scanButton.addEventListener('click', () => {
     const formData = new FormData();
     formData.append('apikey', API_KEY);
     formData.append('base64Image', imageDataUrl);
-    formData.append('language', 'jpn'); // <-- RESTORED TO SINGLE LANGUAGE FOR STABILITY
+    formData.append('language', 'jpn'); // RESTORED TO SINGLE LANGUAGE FOR STABILITY
     formData.append('isOverlayRequired', false);
     
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 20000));
