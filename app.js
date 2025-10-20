@@ -166,9 +166,12 @@ function levenshtein(s1, s2) {
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
+    
+    const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
+    // ** THE FIX IS HERE: Added a quality gate for bad scans **
     const qualityCheck = (text.match(/[^a-zA-Z0-9\s\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF]/g) || []).length;
-    if ((text.length > 0 && qualityCheck / text.length > 0.4) || text.trim() === '') {
+    if ((text.length > 0 && qualityCheck / text.length > 0.4) || searchableText.length < 15) { // Check for gibberish OR very short text
         resultsDiv.innerHTML = `<div class="result-box error"><h2>Poor Scan Quality</h2><p>The text could not be read clearly. Please try again with a better lit, non-reflective, and focused photo.</p></div>`;
         resultsDiv.scrollIntoView({ behavior: 'smooth' });
         return;
@@ -176,8 +179,6 @@ async function analyzeIngredients(text) {
 
     const response = await fetch('database.json');
     const db = await response.json();
-
-    const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
     const findRawMatches = (list) => {
         const matches = new Map();
@@ -197,8 +198,7 @@ async function analyzeIngredients(text) {
                     const substring = searchableText.substring(i, i + cleanedAlias.length + tolerance - 1);
                     if (levenshtein(substring, cleanedAlias) <= tolerance) {
                         matches.set(alias, ingredient);
-                        // ** THE FIX IS HERE: Changed 'break' to 'continue' **
-                        continue; 
+                        continue;
                     }
                 }
             }
