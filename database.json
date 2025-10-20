@@ -1,36 +1,42 @@
 {
-  "haram": [
-    { "name": "Pork & its by-products", "aliases": ["pork", "bacon", "ham", "lard", "豚肉", "豚", "ポーク", "ベーコン", "ハム", "ラード", "豚脂"] },
-    { "name": "Non-Halal Meat (Beef, Chicken, etc.)", "aliases": ["meat", "beef", "veal", "chicken", "poultry", "turkey", "lamb", "mutton", "animal fat", "animal broth", "stock", "bouillon", "consomme", "肉", "牛肉", "牛", "ビーフ", "鶏肉", "鶏", "とり", "チキン", "ラム", "マトン", "七面鳥", "動物性油脂", "動物エキス", "ビーフエキス", "チキンエキス", "コンソメ", "ブイヨン"] },
-    { "name": "Gelatin / Collagen", "aliases": ["gelatin", "jello", "collagen", "ゼラチン", "コラーゲン"] },
-    { "name": "Alcohol & Intoxicants", "aliases": ["alcohol", "ethanol", "ethyl alcohol", "wine", "beer", "liquor", "spirits", "brandy", "cognac", "whiskey", "rum", "sake", "mirin", "酒精", "アルコール", "酒", "洋酒", "ワイン", "ビール", "日本酒", "みりん", "味醂", "リキュール", "ラム酒", "ブランディ", "ウィスキー"] },
-    { "name": "Blood", "aliases": ["blood", "blood plasma", "血", "血漿"] },
-    { "name": "Carmine / Cochineal (E120)", "aliases": ["carmine", "cochineal", "e120", "コチニール", "カルミン", "ラック色素"] },
-    { "name": "Pepsin", "aliases": ["pepsin", "ペプシン"] },
-    { "name": "Shellac (E904)", "aliases": ["shellac", "glaze", "e904", "セラック"] }
-  ],
-  "mushbooh": [
-    { "name": "Shortening / Fats of unknown origin", "aliases": ["shortening", "fat", "fat spread", "油脂", "ファットスプレッド", "ショートニング", "ショートニン"] },
-    { "name": "Emulsifiers (e.g., Mono/Diglycerides)", "aliases": ["emulsifier", "diglyceride", "mono and diglycerides", "monoglyceride", "e471", "e472", "e477", "乳化剤", "ジグリセリド", "モノグリセリド"] },
-    { "name": "Whey", "aliases": ["whey", "whey protein concentrate", "reduced mineral whey", "ホエイ", "ホエイプロテインコンセントレート", "還元ホエイ"] },
-    { "name": "Rennet / Renin", "aliases": ["rennet", "rennin", "レンネット", "レンニン"] },
-    { "name": "Soy Sauce", "aliases": ["soy sauce", "醤油", "しょうゆ"] },
-    { "name": "Margarine", "aliases": ["margarine", "マーガリン"] },
-    { "name": "Vitamins (unknown source)", "aliases": ["vitamins", "vitamin a", "vitamin d", "vitamin e", "ビタミン"] },
-    { "name": "Glycerin / Glycerol (E422)", "aliases": ["glycerin", "glycerol", "e422", "グリセリン", "グリセロール"] },
-    { "name": "Enzymes (unknown source)", "aliases": ["enzymes", "lipase", "protease", "amylase", "酵素", "リパーゼ", "プロテアーゼ", "アミラーゼ"] },
-    { "name": "L-Cysteine (E920)", "aliases": ["cysteine", "l-cysteine", "e920", "システイン", "l-システイン"] },
-    { "name": "Casein / Caseinates", "aliases": ["casein", "caseinates", "sodium caseinate", "calcium caseinate", "カゼイン", "カゼインナトリウム"] },
-    { "name": "Yeast Extract (unknown source)", "aliases": ["yeast extract", "autolyzed yeast", "酵母エキス", "自家製酵母"] },
-    { "name": "Flavorings (unknown source)", "aliases": ["natural flavors", "artificial flavors", "flavoring", "香料", "天然香料", "人工香料", "調味料（アミノ酸等）"] },
-    { "name": "Lecithin (E322)", "aliases": ["lecithin", "lecithins", "e322", "soy lecithin", "レシチン", "大豆レシチン"] }
-  ],
-  "halal_exceptions": {
-    "emulsifier": ["emulsifier (derived from soy)", "emulsifier (soy)"],
-    "乳化剤": ["乳化剤（大豆由来）"],
-    "fat": ["vegetable fat"],
-    "油脂": ["植物油脂"],
-    "shortening": ["vegetable shortening"],
-    "ショートニング": ["植物性ショートニング"]
-  }
+  "haram": [
+    { "name": "Pork & its by-products", "aliases": ["pork", "bacon", "ham", "lard", "豚肉", "豚", "ポーク", "ベーコン", "ハム", "ラード", "豚脂"] },
+    { "name": "Non-Halal Meat (Beef, Chicken, etc.)", "aliases": ["meat", "beef", "veal", "chicken", "poultry", "turkey", "lamb", "mutton", "animal fat", "animal broth", "stock", "bouillon", "consomme", "肉", "牛肉", "牛", "ビーフ", "鶏肉", "鶏", "とり", "チキン", "ラム", "マトン", "七面鳥", "動物性油脂", "動物エキス", "ビーフエキス", "チキンエキス", "コンソメ", "ブイヨン"] },
+    { "name": "Gelatin / Collagen (Unknown Source)", "aliases": ["gelatin", "jello", "collagen", "ゼラチン", "コラーゲン"] },
+    { "name": "Alcohol & Intoxicants", "aliases": ["alcohol", "ethanol", "ethyl alcohol", "wine", "beer", "liquor", "spirits", "brandy", "cognac", "whiskey", "rum", "sake", "mirin", "酒精", "アルコール", "酒", "洋酒", "ワイン", "ビール", "日本酒", "みりん", "味醂", "リキュール", "ラム酒", "ブランディ", "ウィスキー"] },
+    { "name": "Blood", "aliases": ["blood", "blood plasma", "血", "血漿"] },
+    { "name": "Carmine / Cochineal (E120)", "aliases": ["carmine", "cochineal", "e120", "コチニール", "カルミン", "ラック色素"] },
+    { "name": "Pepsin", "aliases": ["pepsin", "ペプシン"] },
+    { "name": "Shellac (E904)", "aliases": ["shellac", "glaze", "e904", "セラック"] }
+  ],
+  "mushbooh": [
+    { "name": "Shortening / Fats of unknown origin", "aliases": ["shortening", "fat", "fat spread", "油脂", "ファットスプレッド", "ショートニング", "ショートニン"] },
+    { "name": "Emulsifiers (e.g., Mono/Diglycerides)", "aliases": ["emulsifier", "diglyceride", "mono and diglycerides", "monoglyceride", "e471", "e472", "e477", "乳化剤", "ジグリセリド", "モノグリセリド"] },
+    { "name": "Whey", "aliases": ["whey", "whey protein concentrate", "reduced mineral whey", "ホエイ", "ホエイプロテインコンセントレート", "還元ホエイ"] },
+    { "name": "Rennet / Renin", "aliases": ["rennet", "rennin", "レンネット", "レンニン"] },
+    { "name": "Soy Sauce", "aliases": ["soy sauce", "醤油", "しょうゆ"] },
+    { "name": "Margarine", "aliases": ["margarine", "マーガリン"] },
+    { "name": "Vitamins (unknown source)", "aliases": ["vitamins", "vitamin a", "vitamin d", "vitamin e", "ビタミン"] },
+    { "name": "Glycerin / Glycerol (E422)", "aliases": ["glycerin", "glycerol", "e422", "グリセリン", "グリセロール"] },
+    { "name": "Enzymes (unknown source)", "aliases": ["enzymes", "lipase", "protease", "amylase", "酵素", "リパーゼ", "プロテアーゼ", "アミラーゼ"] },
+    { "name": "L-Cysteine (E920)", "aliases": ["cysteine", "l-cysteine", "e920", "システイン", "l-システイン"] },
+    { "name": "Casein / Caseinates", "aliases": ["casein", "caseinates", "sodium caseinate", "calcium caseinate", "カゼイン", "カゼインナトリウム"] },
+    { "name": "Yeast Extract (unknown source)", "aliases": ["yeast extract", "autolyzed yeast", "酵母エキス", "自家製酵母"] },
+    { "name": "Flavorings (unknown source)", "aliases": ["natural flavors", "artificial flavors", "flavoring", "香料", "天然香料", "人工香料", "調味料（アミノ酸等）"] },
+    { "name": "Lecithin (E322)", "aliases": ["lecithin", "lecithins", "e322", "soy lecithin", "レシチン", "大豆レシチン"] }
+  ],
+  "halal_exceptions": {
+    "emulsifier": ["emulsifier (derived from soy)", "emulsifier (soy)", "emulsifier (plant-derived)", "emulsifier (vegetable)"],
+    "乳化剤": ["乳化剤（大豆由来）", "乳化剤（植物由来）"],
+    "fat": ["vegetable fat", "fish oil", "bovine fat (halal)"],
+    "油脂": ["植物油脂", "魚油"],
+    "shortening": ["vegetable shortening", "plant shortening"],
+    "ショートニング": ["植物性ショートニング"],
+    "lecithin": ["soy lecithin", "vegetable lecithin", "大豆レシチン", "植物レシチン"],
+    "レシチン": ["大豆レシチン", "植物レシチン"],
+    "gelatin": ["fish gelatin", "marine collagen", "bovine gelatin (halal)", "hydrolyzed fish collagen"],
+    "ゼラチン": ["魚ゼラチン", "海洋性コラーゲン", "牛ゼラチン（ハラール）"],
+    "glycerin": ["vegetable glycerin", "plant glycerin"],
+    "グリセリン": ["植物性グリセリン"]
+  }
 }
