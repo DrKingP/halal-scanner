@@ -89,22 +89,29 @@ scanButton.addEventListener('click', () => {
     statusContainer.classList.remove('hidden');
     statusMessage.textContent = 'Uploading image...';
     progressBar.style.width = '25%';
-    const imageDataUrl = canvas.toDataURL('image/jpeg');
+    
+    // CHANGE 1: Compress the image to 85% quality to reduce file size
+    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85); 
+
     const formData = new FormData();
     formData.append('apikey', API_KEY);
     formData.append('base64Image', imageDataUrl);
     formData.append('language', 'jpn');
     formData.append('isOverlayRequired', false);
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 20000));
+    
+    // CHANGE 2: Increase the timeout from 20 to 30 seconds (30000ms)
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 30000)); 
+
     const fetchPromise = fetch('https://api.ocr.space/parse/image', { method: 'POST', body: formData });
+    
     Promise.race([fetchPromise, timeoutPromise])
     .then(response => response.json())
     .then(data => {
         statusMessage.textContent = 'Analyzing text...';
         progressBar.style.width = '75%';
         const rawText = data.ParsedResults[0]?.ParsedText || 'No text recognized.';
-        const processedText = preprocessOcrText(rawText); // Pre-process the text
-        analyzeIngredients(processedText); // Analyze the cleaned text
+        const processedText = preprocessOcrText(rawText);
+        analyzeIngredients(processedText);
     })
     .catch(err => {
         console.error(err);
