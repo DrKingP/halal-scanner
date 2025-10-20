@@ -5,18 +5,23 @@ body {
     text-align: center;
     margin: 0;
     /* Reduced padding-bottom for fixed footer space */
-    padding-bottom: 110px; 
+    padding-bottom:0; 
     padding-top: 0; 
 }
 
-/* NEW: Wrapper for header content to control its padding and reduce top space */
+/* FIX: Reduce top spacing and consolidate header elements */
 .app-header {
-    padding: 10px 20px 0 20px; /* Reduced top padding */
+    padding: 10px 20px 5px 20px; /* Reduced padding */
+    margin-bottom: 5px;
 }
 
 h1 {
     color: #006400;
     margin-top: 0;
+    margin-bottom: 1px; /* Reduced space below title */
+}
+.app-header p {
+    margin-top: 0; /* Reduced space above guidance text */
 }
 
 /* Flexbox container for the two columns */
@@ -26,8 +31,8 @@ h1 {
     justify-content: center;
     gap: 20px;
     max-width: 1000px;
-    /* Reduced margin-top to decrease space above camera/results */
-    margin: 10px auto 20px auto; 
+    /* FIX: Reduce margin to shrink space above camera */
+    margin: 5px auto 20px auto; 
 }
 
 /* On mobile, only the left-column (scanner/results) should appear tall. */
@@ -49,7 +54,7 @@ h1 {
     border: 3px solid #ccc;
     border-radius: 8px;
     overflow: hidden;
-    /* CRITICAL FIX: Set max-height to 300px and fixed aspect ratio */
+    /* FIX: Max-height is 300px and fixed aspect ratio */
     max-height: 300px; 
     aspect-ratio: 1 / 1; 
 }
@@ -61,18 +66,16 @@ h1 {
     display: block;
 }
 
-/* REMOVED: Styles for #scan-target-overlay */
-
 /* NEW: Wrapper for initial buttons (Capture/Upload) */
 #initial-buttons-wrapper {
     width: 100%; 
     max-width: 400px;
-    margin: 10px auto; /* Reduced margin */
+    margin: 10px auto; 
     padding: 0 20px;
     box-sizing: border-box;
 }
 #initial-buttons-wrapper button {
-    margin: 5px 0; /* Reduced space between buttons */
+    margin: 5px 0; 
 }
 
 /* --- FIXED FOOTER STYLES (Scan/Retake buttons) --- */
@@ -122,7 +125,37 @@ h1 {
 #results { width: 100%; text-align: left; }
 .result-box { padding: 15px; border-radius: 8px; margin-top: 20px; }
 .result-box h2 { margin-top: 0; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 10px; }
-/* ... other result styles (not shown for brevity) ... */
+.result-box h3 { margin-bottom: 5px; }
+.ingredient-list { font-weight: bold; word-wrap: break-word; }
+.haram { background-color: #ffdddd; border: 1px solid #d8000c; }
+.mushbooh { background-color: #fffbdd; border: 1px solid #9f6000; }
+.halal { background-color: #ddffdd; border: 1px solid #4f8a10; }
+.error { background-color: #ffdddd; border: 1px solid #d8000c; }
+
+#status-container { margin-top: 20px; }
+.progress-bar-container { width: 100%; background-color: #ccc; border-radius: 5px; height: 12px; }
+#progress-bar { width: 0%; height: 100%; background-color: #28a745; border-radius: 5px; transition: width 0.2s ease-in-out; }
+#status-message { margin: 0 0 10px 0; font-weight: bold; text-transform: capitalize; text-align: left; }
+
+/* FIX: Ensure disclaimer text is not adding excess space */
+.disclaimer { 
+    font-size: 12px; 
+    color: #6c757d; 
+    margin: 15px 0 0 0; 
+    text-align: center;
+    padding: 5px 0;
+    border-top: 1px solid #ccc;
+}
+/* FIX: Remove default debug box styling to prevent it from consuming space when visible */
+#debug-container {
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    font-family: monospace;
+    text-align: left;
+}
+
 
 /* Media query for mobile devices */
 @media (max-width: 600px) {

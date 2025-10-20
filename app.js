@@ -11,7 +11,7 @@ const statusContainer = document.getElementById('status-container');
 const statusMessage = document.getElementById('status-message');
 const progressBar = document.getElementById('progress-bar');
 const debugContainer = document.getElementById('debug-container');
-const initialButtonsWrapper = document.getElementById('initial-buttons-wrapper'); // NEW ELEMENT ID
+const initialButtonsWrapper = document.getElementById('initial-buttons-wrapper'); 
 const uploadButton = document.getElementById('uploadButton');
 const uploadInput = document.getElementById('uploadInput');
 const disclaimerText = document.getElementById('disclaimer-text');
@@ -88,11 +88,11 @@ uploadInput.addEventListener('change', (event) => {
 retakeButton.addEventListener('click', () => {
     canvas.classList.add('hidden');
     video.classList.remove('hidden');
-    fixedActionsFooter.classList.add('hidden'); // HIDE SCAN/RETAKE BUTTONS
-    initialButtonsWrapper.classList.remove('hidden'); // SHOW CAPTURE/UPLOAD BUTTONS
+    fixedActionsFooter.classList.add('hidden'); 
+    initialButtonsWrapper.classList.remove('hidden'); 
     resultsDiv.innerHTML = '';
     statusContainer.classList.add('hidden');
-    debugContainer.classList.add('hidden'); 
+    debugContainer.classList.add('hidden'); // Ensure debug is hidden on start over
     disclaimerText.classList.add('hidden');
 });
 
@@ -126,6 +126,12 @@ scanButton.addEventListener('click', () => {
         statusMessage.textContent = 'OCR Scanning Text...';
         progressBar.style.width = '70%';
         const recognizedText = data.ParsedResults[0]?.ParsedText || 'No text recognized.';
+        
+        // **BUG FIX** The debug text is visible, so it must be explicitly shown, 
+        // but it should be hidden AFTER analysis if you don't want it visible.
+        debugContainer.classList.remove('hidden');
+        debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${recognizedText || 'No text recognized'}</pre>`;
+        
         analyzeIngredients(recognizedText);
     })
     .catch(err => {
@@ -146,8 +152,9 @@ scanButton.addEventListener('click', () => {
 
 // --- 3. Analyze the Ingredients (FINAL, BULLETPROOF TWO-PASS LOGIC) ---
 async function analyzeIngredients(text) {
-    debugContainer.classList.remove('hidden');
-    debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
+    // BUG FIX: Hide the raw text box immediately after analysis starts to clear space for the result
+    debugContainer.classList.add('hidden'); 
+    
     disclaimerText.classList.remove('hidden');
 
     const qualityCheck = (text.match(/[^a-zA-Z0-9\s\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF]/g) || []).length;
