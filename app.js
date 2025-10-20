@@ -162,15 +162,13 @@ function levenshtein(s1, s2) {
     return costs[s2.length];
 }
 
-// --- 6. Analyze the Ingredients (Rewritten for Accuracy) ---
+// --- 6. Analyze the Ingredients ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
-    
-    const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
     const qualityCheck = (text.match(/[^a-zA-Z0-9\s\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF]/g) || []).length;
-    if ((text.length > 0 && qualityCheck / text.length > 0.4) || searchableText.length < 15) {
+    if ((text.length > 0 && qualityCheck / text.length > 0.4) || text.trim() === '') {
         resultsDiv.innerHTML = `<div class="result-box error"><h2>Poor Scan Quality</h2><p>The text could not be read clearly. Please try again with a better lit, non-reflective, and focused photo.</p></div>`;
         resultsDiv.scrollIntoView({ behavior: 'smooth' });
         return;
@@ -179,28 +177,38 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
 
+    const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
+
+    // --- UPDATED to use Fuzzy Matching ---
     const findRawMatches = (list) => {
         const matches = new Map();
-        for (const ingredient of list) {
+        list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                 if (cleanedAlias.length < 3) continue;
 
+                // First, check for a direct, exact match (fastest)
                 if (searchableText.includes(cleanedAlias)) {
-                    matches.set(alias, ingredient);
-                    // We DO NOT break or continue the outer loop. We check every alias.
-                } else if (cleanedAlias.length >= 4) { // Only do fuzzy search on longer words
-                    const tolerance = cleanedAlias.length > 7 ? 2 : 1;
-                    for (let i = 0; i <= searchableText.length - cleanedAlias.length; i++) {
-                        const substring = searchableText.substring(i, i + cleanedAlias.length + tolerance - 1);
-                        if (levenshtein(substring, cleanedAlias) <= tolerance) {
-                            matches.set(alias, ingredient);
-                            break; // Break from the substring check, but not the alias check
-                        }
+                    matches.set(alias.toLowerCase(), ingredient);
+                    continue; // Found it, move to the next alias
+                }
+
+                // If no direct match, try fuzzy matching for aliases of 4+ chars
+                if (cleanedAlias.length < 4) continue;
+                
+                // Set a tolerance for errors (e.g., 1 error for short words, 2 for longer)
+                const tolerance = cleanedAlias.length > 7 ? 2 : 1; 
+
+                // Check all substrings of the searchable text
+                for (let i = 0; i <= searchableText.length - cleanedAlias.length; i++) {
+                    const substring = searchableText.substring(i, i + cleanedAlias.length + tolerance -1);
+                    if (levenshtein(substring, cleanedAlias) <= tolerance) {
+                        matches.set(alias.toLowerCase(), ingredient);
+                        break; // Found a fuzzy match, stop checking this alias
                     }
                 }
             }
-        }
+        });
         return matches;
     };
 
@@ -208,64 +216,77 @@ async function analyzeIngredients(text) {
     let mushboohMatchesMap = findRawMatches(db.mushbooh);
 
     const exceptionsToRemove = new Set();
-    for (const [foundAlias, ingredient] of mushboohMatchesMap.entries()) {
-        const exceptions = db.halal_exceptions[foundAlias.toLowerCase()];
+    mushboohMatchesMap.forEach((ingredient, alias) => {
+        const exceptions = db.halal_exceptions[alias];
         if (exceptions) {
             for (const exceptionPhrase of exceptions) {
                 const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                 if (searchableText.includes(cleanedException)) {
-                    exceptionsToRemove.add(foundAlias);
+                    exceptionsToRemove.add(alias);
                     break;
                 }
             }
         }
-    }
+    });
     exceptionsToRemove.forEach(alias => mushboohMatchesMap.delete(alias));
 
     const groupResults = (matchesMap) => {
         const resultMap = {};
-        matchesMap.forEach((ingredient, foundAlias) => {
+        matchesMap.forEach((ingredient, alias) => {
+            const originalAlias = ingredient.aliases.find(a => a.toLowerCase() === alias) || alias;
             if (!resultMap[ingredient.name]) {
                 resultMap[ingredient.name] = new Set();
             }
-            resultMap[ingredient.name].add(foundAlias);
+            resultMap[ingredient.name].add(originalAlias);
         });
         return resultMap;
     };
 
     let foundHaram = groupResults(haramMatchesMap);
     let foundMushbooh = groupResults(mushboohMatchesMap);
-    
-    // This is the correct way to handle overlaps
-    for (const category in foundHaram) {
-        if (foundMushbooh[category]) {
-            delete foundMushbooh[category];
+
+    const cleanRedundancies = (resultMap) => {
+        for (const category in resultMap) {
+            const aliases = [...resultMap[category]];
+            const toRemove = new Set();
+            for (const specific of aliases) {
+                for (const general of aliases) {
+                    if (specific.toLowerCase() !== general.toLowerCase() && specific.toLowerCase().includes(general.toLowerCase())) {
+                        toRemove.add(general);
+                    }
+                }
+            }
+            toRemove.forEach(item => resultMap[category].delete(item));
         }
+    };
+
+    cleanRedundancies(foundHaram);
+    cleanRedundancies(foundMushbooh);
+
+    for (const category in foundHaram) {
+        delete foundMushbooh[category];
     }
 
     const generateListHtml = (resultMap) => {
         let listHtml = '';
         for (const category in resultMap) {
-            // Filter out empty sets before displaying
-            if (resultMap[category].size > 0) {
-                 listHtml += `<div class="category-group"><h4>${category}:</h4><p class="ingredient-list">${[...resultMap[category]].join(', ')}</p></div>`;
-            }
+            listHtml += `<div class="category-group"><h4>${category}:</h4><p class="ingredient-list">${[...resultMap[category]].join(', ')}</p></div>`;
         }
         return listHtml;
     };
 
     let html = '';
-    const haramHtml = generateListHtml(foundHaram);
-    const mushboohHtml = generateListHtml(foundMushbooh);
+    const haramCategories = Object.keys(foundHaram);
+    const mushboohCategories = Object.keys(foundMushbooh);
 
-    if (haramHtml) {
-        html += `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p>${haramHtml}</div>`;
+    if (haramCategories.length > 0) {
+        html += `<div class="result-box haram"><h2>🔴 Haram</h2><p>This product is considered Haram because it contains the following:</p>${generateListHtml(foundHaram)}</div>`;
     }
     
-    if (mushboohHtml) {
-        const marginTop = haramHtml ? 'style="margin-top: 15px;"' : '';
-        const title = haramHtml ? '<h3>🟡 Doubtful Ingredients Also Found:</h3>' : '<h2>🟡 Doubtful (Mushbooh)</h2>';
-        html += `<div class="result-box mushbooh" ${marginTop}>${title}<p>The source of the following ingredients should be verified:</p>${mushboohHtml}</div>`;
+    if (mushboohCategories.length > 0) {
+        const marginTop = haramCategories.length > 0 ? 'style="margin-top: 15px;"' : '';
+        const title = haramCategories.length > 0 ? '<h3>🟡 Doubtful Ingredients Also Found:</h3>' : '<h2>🟡 Doubtful (Mushbooh)</h2>';
+        html += `<div class="result-box mushbooh" ${marginTop}>${title}<p>The source of the following ingredients should be verified:</p>${generateListHtml(foundMushbooh)}</div>`;
     }
 
     if (html === '') {
