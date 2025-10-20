@@ -210,7 +210,6 @@ async function analyzeIngredients(text) {
 
     const exceptionsToRemove = new Set();
     
-    // ** THE FIX IS HERE: This logic is now simpler and more direct **
     for (const [foundAlias, ingredient] of mushboohMatchesMap.entries()) {
         const exceptions = db.halal_exceptions[foundAlias.toLowerCase()];
         if (exceptions) {
@@ -239,23 +238,7 @@ async function analyzeIngredients(text) {
     let foundHaram = groupResults(haramMatchesMap);
     let foundMushbooh = groupResults(mushboohMatchesMap);
 
-    const cleanRedundancies = (resultMap) => {
-        for (const category in resultMap) {
-            const aliases = [...resultMap[category]];
-            const toRemove = new Set();
-            for (const specific of aliases) {
-                for (const general of aliases) {
-                    if (specific.toLowerCase() !== general.toLowerCase() && specific.toLowerCase().includes(general.toLowerCase())) {
-                        toRemove.add(general);
-                    }
-                }
-            }
-            toRemove.forEach(item => resultMap[category].delete(item));
-        }
-    };
-
-    cleanRedundancies(foundHaram);
-    cleanRedundancies(foundMushbooh);
+    // ** THE FIX IS HERE: The faulty cleanRedundancies function has been removed. **
 
     for (const category in foundHaram) {
         delete foundMushbooh[category];
@@ -278,7 +261,7 @@ async function analyzeIngredients(text) {
     }
     
     if (mushboohCategories.length > 0) {
-        const marginTop = haramCategories.length > 0 ? 'style="margin-top: 15px;"' : '';
+        const marginTop = haramCategories.length > 0 ? 'style="margin--top: 15px;"' : '';
         const title = haramCategories.length > 0 ? '<h3>🟡 Doubtful Ingredients Also Found:</h3>' : '<h2>🟡 Doubtful (Mushbooh)</h2>';
         html += `<div class="result-box mushbooh" ${marginTop}>${title}<p>The source of the following ingredients should be verified:</p>${generateListHtml(foundMushbooh)}</div>`;
     }
