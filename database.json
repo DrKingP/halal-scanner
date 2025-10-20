@@ -14,7 +14,7 @@
     { "name": "Emulsifiers (e.g., Mono/Diglycerides)", "aliases": ["emulsifier", "diglyceride", "mono and diglycerides", "monoglyceride", "e471", "e472", "e477", "乳化剤", "ジグリセリド", "モノグリセリド"] },
     { "name": "Whey", "aliases": ["whey", "whey protein concentrate", "reduced mineral whey", "ホエイ", "ホエイプロテインコンセントレート", "還元ホエイ"] },
     { "name": "Rennet / Renin", "aliases": ["rennet", "rennin", "レンネット", "レンニン"] },
-    { "name": "Soy Sauce", "aliases": ["soy sauce", "醤油", "しょうゆ", "粉末しょうゆ", "粉末醤油"] },
+    { "name": "Soy Sauce", "aliases": ["soy sauce", "醤油", "しょうゆ", "粉末しょうゆ", "粉末醤油", "粉末しようゆ"] },
     { "name": "Margarine", "aliases": ["margarine", "マーガリン"] },
     { "name": "Vitamins (unknown source)", "aliases": ["vitamins", "vitamin a", "vitamin d", "vitamin e", "vitamin c", "ビタミン", "ビタミンc"] },
     { "name": "Glycerin / Glycerol (E422)", "aliases": ["glycerin", "glycerol", "e422", "グリセリン", "グリセロール"] },
