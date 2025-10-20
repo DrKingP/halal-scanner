@@ -14,10 +14,10 @@ const debugContainer = document.getElementById('debug-container');
 const initialButtons = document.getElementById('initial-buttons');
 const uploadButton = document.getElementById('uploadButton');
 const uploadInput = document.getElementById('uploadInput');
-const disclaimerText = document.getElementById('disclaimer-text'); // New element
+const disclaimerText = document.getElementById('disclaimer-text');
 
 // --- YOUR API KEY IS INCLUDED HERE ---
-const API_KEY = 'K89442506988957';
+const API_KEY = 'K89442506988957'; 
 
 // --- HELPER FUNCTION: Convert Canvas Image to Grayscale ---
 function convertToGrayscale(context, canvas) {
@@ -94,7 +94,7 @@ retakeButton.addEventListener('click', () => {
     resultsDiv.innerHTML = '';
     statusContainer.classList.add('hidden');
     debugContainer.classList.add('hidden'); 
-    disclaimerText.classList.add('hidden'); // Reset disclaimer
+    disclaimerText.classList.add('hidden');
 });
 
 scanButton.addEventListener('click', () => {
@@ -105,17 +105,17 @@ scanButton.addEventListener('click', () => {
     disclaimerText.classList.add('hidden');
     statusContainer.classList.remove('hidden');
     
-    // NEW: Apply grayscale pre-processing to improve OCR accuracy
+    // Apply grayscale pre-processing to improve OCR accuracy
     convertToGrayscale(context, canvas);
     
-    statusMessage.textContent = 'Pre-processing and Uploading Image...'; // Enhanced Status
+    statusMessage.textContent = 'Pre-processing and Uploading Image...';
     progressBar.style.width = '25%';
     
     const imageDataUrl = canvas.toDataURL('image/jpeg');
     const formData = new FormData();
     formData.append('apikey', API_KEY);
     formData.append('base64Image', imageDataUrl);
-    formData.append('language', 'jpn,eng'); // <-- DUAL-LANGUAGE OCR
+    formData.append('language', 'jpn'); // <-- RESTORED TO SINGLE LANGUAGE FOR STABILITY
     formData.append('isOverlayRequired', false);
     
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 20000));
@@ -124,7 +124,7 @@ scanButton.addEventListener('click', () => {
     Promise.race([fetchPromise, timeoutPromise])
     .then(response => response.json())
     .then(data => {
-        statusMessage.textContent = 'OCR Scanning Text...'; // Enhanced Status
+        statusMessage.textContent = 'OCR Scanning Text...';
         progressBar.style.width = '70%';
         const recognizedText = data.ParsedResults[0]?.ParsedText || 'No text recognized.';
         analyzeIngredients(recognizedText);
@@ -149,7 +149,7 @@ scanButton.addEventListener('click', () => {
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
-    disclaimerText.classList.remove('hidden'); // Show disclaimer once analysis starts
+    disclaimerText.classList.remove('hidden');
 
     const qualityCheck = (text.match(/[^a-zA-Z0-9\s\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF]/g) || []).length;
     if ((text.length > 0 && qualityCheck / text.length > 0.4) || text.trim() === '') {
@@ -158,7 +158,7 @@ async function analyzeIngredients(text) {
         return;
     }
 
-    statusMessage.textContent = 'Comparing with Database...'; // Enhanced Status
+    statusMessage.textContent = 'Comparing with Database...';
     progressBar.style.width = '90%';
     
     const response = await fetch('database.json');
@@ -228,5 +228,5 @@ async function analyzeIngredients(text) {
 
     resultsDiv.innerHTML = html;
     resultsDiv.scrollIntoView({ behavior: 'smooth' });
-    progressBar.style.width = '100%'; // Finalize progress bar
+    progressBar.style.width = '100%'; 
 }

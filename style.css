@@ -1,65 +1,69 @@
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f0f0f0;
-    color: #333;
-    text-align: center;
-    margin: 0;
-    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
 }
 
 h1 {
-    color: #006400;
+    color: #006400;
 }
 
 /* Flexbox container for the two columns */
 .main-container {
-    display: flex;
-    flex-wrap: wrap; /* Allows columns to wrap on small screens */
-    justify-content: center;
-    gap: 20px;
-    max-width: 1000px;
-    margin: 20px auto;
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: center;
+    gap: 20px;
+    max-width: 1000px;
+    margin: 20px auto;
 }
 
 .left-column, .right-column {
-    flex: 1; /* Each column takes up equal space */
-    min-width: 300px; /* Minimum width before wrapping */
-    padding: 15px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    flex: 1; 
+    min-width: 300px; 
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 #scanner-container {
-    position: relative;
-    width: 100%;
-    border: 3px solid #ccc;
-    border-radius: 8px;
-    overflow: hidden;
+    position: relative;
+    width: 100%;
+    border: 3px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
+/* FIX: Allow height to be determined by the content/aspect ratio to prevent excessive height */
 #video, #canvas {
-    width: 100%;
-    display: block;
+    width: 100%;
+    height: auto; 
+    object-fit: cover; 
+    display: block;
 }
 
+/* FIX: Increased base padding and font size for better readability and tap target */
 #captureButton, #uploadButton, #scanButton, #retakeButton {
-    display: block;
-    width: 100%;
-    padding: 15px;
-    font-size: 18px;
-    font-weight: bold;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    margin: 10px 0;
-    cursor: pointer;
+    display: block;
+    width: 100%;
+    padding: 20px 10px; /* Increased padding for tap target */
+    font-size: 18px; /* Increased font size */
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    margin: 10px 0;
+    cursor: pointer;
+    box-sizing: border-box;
 }
 
 #captureButton, #scanButton { background-color: #28a745; }
 #captureButton:active, #scanButton:active { background-color: #218838; }
 
-/* Style for the new upload button */
 #uploadButton { background-color: #007bff; }
 #uploadButton:active { background-color: #0056b3; }
 
@@ -84,23 +88,23 @@ h1 {
 #status-message { margin: 0 0 10px 0; font-weight: bold; text-transform: capitalize; text-align: left; }
 
 #debug-container {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    font-family: monospace;
-    text-align: left;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-family: monospace;
+    text-align: left;
 }
 #debug-container h3 {
-    margin-top: 0;
-    font-size: 14px;
-    color: #6c757d;
+    margin-top: 0;
+    font-size: 14px;
+    color: #6c757d;
 }
 #debug-container pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    color: #212529;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: #212529;
 }
 
 .disclaimer { 
@@ -114,7 +118,8 @@ h1 {
 
 /* Media query for mobile devices */
 @media (max-width: 600px) {
-  #scanner-container {
-    max-height: 40vh;
-  }
+    /* Ensure columns stack vertically on mobile */
+    .left-column, .right-column {
+        flex: 1 1 100%; 
+    }
 }
