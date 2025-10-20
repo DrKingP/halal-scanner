@@ -78,7 +78,6 @@ retakeButton.addEventListener('click', () => {
     debugContainer.classList.add('hidden'); 
 });
 
-// --- UPDATED to use Tesseract.js ---
 scanButton.addEventListener('click', async () => {
     scanButton.disabled = true;
     retakeButton.disabled = true;
@@ -179,23 +178,24 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
+    // --- REVERTING TO THE SAFER, HYBRID FUZZY MATCHING LOGIC ---
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                if (cleanedAlias.length < 2) continue; // Changed to 2 to catch things like 牛
+                if (cleanedAlias.length < 2) continue;
 
-                // ADD THIS LINE FOR DEBUGGING
-                console.log(`Checking for alias: '${cleanedAlias}'`);
-
+                // First, check for an exact match (most reliable)
                 if (searchableText.includes(cleanedAlias)) {
                     matches.set(alias.toLowerCase(), ingredient);
                     continue; 
                 }
                 
+                // If no exact match, use fuzzy matching but ONLY for longer words
+                // to prevent false positives like "jello" from "yellow".
                 const tolerance = cleanedAlias.length < 5 ? 0 : (cleanedAlias.length < 8 ? 1 : 2);
-                if (tolerance === 0) continue; 
+                if (tolerance === 0) continue; // Skip fuzzy check for short words
 
                 for (let i = 0; i <= searchableText.length - cleanedAlias.length; i++) {
                     const substring = searchableText.substring(i, i + cleanedAlias.length);
