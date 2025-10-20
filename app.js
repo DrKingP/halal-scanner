@@ -178,7 +178,7 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // --- REVERTING TO THE SAFER, HYBRID FUZZY MATCHING LOGIC ---
+    // --- The Final, Reliable Matching Logic ---
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
@@ -186,16 +186,18 @@ async function analyzeIngredients(text) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                 if (cleanedAlias.length < 2) continue;
 
-                // First, check for an exact match (most reliable)
+                // First, prioritize an exact substring match. This is the safest way.
                 if (searchableText.includes(cleanedAlias)) {
                     matches.set(alias.toLowerCase(), ingredient);
                     continue; 
                 }
                 
-                // If no exact match, use fuzzy matching but ONLY for longer words
-                // to prevent false positives like "jello" from "yellow".
-                const tolerance = cleanedAlias.length < 5 ? 0 : (cleanedAlias.length < 8 ? 1 : 2);
-                if (tolerance === 0) continue; // Skip fuzzy check for short words
+                // Only if an exact match is NOT found, proceed to a fuzzy search.
+                // We are now being stricter: fuzzy search is disabled for any word 5 characters or shorter.
+                const tolerance = cleanedAlias.length <= 5 ? 0 : (cleanedAlias.length < 9 ? 1 : 2);
+                
+                // If tolerance is 0, we've already failed the .includes() check, so we can skip.
+                if (tolerance === 0) continue; 
 
                 for (let i = 0; i <= searchableText.length - cleanedAlias.length; i++) {
                     const substring = searchableText.substring(i, i + cleanedAlias.length);
