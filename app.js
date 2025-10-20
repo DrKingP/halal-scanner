@@ -120,7 +120,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL, BULLETPROOF LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL, BULLETPROOF TWO-PASS LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -135,63 +135,42 @@ async function analyzeIngredients(text) {
     const response = await fetch('database.json');
     const db = await response.json();
 
-    const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
+    let searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // STEP 1: Find all potential aliases that exist in the text, regardless of exceptions
-    const findRawMatches = (list) => {
-        const matches = new Map(); // Using a Map to store { alias -> ingredient object }
+    // STEP 1: Find and "neutralize" all Halal exception phrases first
+    for (const key in db.halal_exceptions) {
+        for (const exceptionPhrase of db.halal_exceptions[key]) {
+            const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
+            // Replace the found exception phrase with a safe placeholder
+            searchableText = searchableText.replace(new RegExp(cleanedException, 'g'), '');
+        }
+    }
+
+    let foundHaram = {};
+    let foundMushbooh = {};
+    
+    // STEP 2: Now, find matches in the remaining (neutralized) text
+    const findMatches = (list, resultMap) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                 if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
-                    matches.set(alias.toLowerCase(), ingredient);
+                    if (!resultMap[ingredient.name]) {
+                        resultMap[ingredient.name] = new Set();
+                    }
+                    resultMap[ingredient.name].add(alias);
                 }
             }
         });
-        return matches;
     };
 
-    let haramMatchesMap = findRawMatches(db.haram);
-    let mushboohMatchesMap = findRawMatches(db.mushbooh);
-
-    // STEP 2: Filter out exceptions from the Mushbooh list
-    const exceptionsToRemove = new Set();
-    mushboohMatchesMap.forEach((ingredient, alias) => {
-        const exceptions = db.halal_exceptions[alias];
-        if (exceptions) {
-            for (const exceptionPhrase of exceptions) {
-                const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                if (searchableText.includes(cleanedException)) {
-                    exceptionsToRemove.add(alias);
-                    break;
-                }
-            }
-        }
-    });
-    exceptionsToRemove.forEach(alias => mushboohMatchesMap.delete(alias));
-
-    // STEP 3: Group the final, filtered aliases by their category for display
-    const groupResults = (matchesMap) => {
-        const resultMap = {};
-        matchesMap.forEach((ingredient, alias) => {
-            // Re-find the original alias casing for display
-            const originalAlias = ingredient.aliases.find(a => a.toLowerCase() === alias) || alias;
-            if (!resultMap[ingredient.name]) {
-                resultMap[ingredient.name] = new Set();
-            }
-            resultMap[ingredient.name].add(originalAlias);
-        });
-        return resultMap;
-    };
-
-    let foundHaram = groupResults(haramMatchesMap);
-    let foundMushbooh = groupResults(mushboohMatchesMap);
-
+    findMatches(db.haram, foundHaram);
+    findMatches(db.mushbooh, foundMushbooh);
+    
     for (const category in foundHaram) {
         delete foundMushbooh[category];
     }
 
-    // STEP 4: Generate the final HTML
     const generateListHtml = (resultMap) => {
         let listHtml = '';
         for (const category in resultMap) {
