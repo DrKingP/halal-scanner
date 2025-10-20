@@ -15,8 +15,7 @@ const initialButtons = document.getElementById('initial-buttons');
 const uploadButton = document.getElementById('uploadButton');
 const uploadInput = document.getElementById('uploadInput');
 
-// --- YOUR API KEY IS INCLUDED HERE ---
-const API_KEY = 'K89442506988957';
+// --- API Key is no longer needed ---
 
 // --- 1. Start the Camera ---
 navigator.mediaDevices.getUserMedia({ 
@@ -81,46 +80,49 @@ retakeButton.addEventListener('click', () => {
     debugContainer.classList.add('hidden'); 
 });
 
-scanButton.addEventListener('click', () => {
+// --- UPDATED to use Tesseract.js ---
+scanButton.addEventListener('click', async () => {
     scanButton.disabled = true;
     retakeButton.disabled = true;
     resultsDiv.innerHTML = '';
     debugContainer.classList.add('hidden');
     statusContainer.classList.remove('hidden');
-    statusMessage.textContent = 'Uploading image...';
-    progressBar.style.width = '25%';
-    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-    const formData = new FormData();
-    formData.append('apikey', API_KEY);
-    formData.append('base64Image', imageDataUrl);
-    formData.append('language', 'jpn');
-    formData.append('isOverlayRequired', false);
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 30000));
-    const fetchPromise = fetch('https://api.ocr.space/parse/image', { method: 'POST', body: formData });
-    Promise.race([fetchPromise, timeoutPromise])
-    .then(response => response.json())
-    .then(data => {
+
+    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+    try {
+        const worker = await Tesseract.createWorker('jpn', 1, {
+            logger: m => {
+                statusMessage.textContent = `${m.status}...`;
+                if (m.status === 'recognizing text') {
+                    progressBar.style.width = `${m.progress * 100}%`;
+                }
+            }
+        });
+
+        statusMessage.textContent = 'Recognizing text...';
+        progressBar.style.width = '0%';
+
+        const { data: { text } } = await worker.recognize(imageDataUrl);
+        await worker.terminate();
+
         statusMessage.textContent = 'Analyzing text...';
-        progressBar.style.width = '75%';
-        const rawText = data.ParsedResults[0]?.ParsedText || 'No text recognized.';
-        const processedText = preprocessOcrText(rawText);
+        progressBar.style.width = '100%';
+        
+        const processedText = preprocessOcrText(text);
         const normalizedText = normalizeJapaneseText(processedText);
         analyzeIngredients(normalizedText);
-    })
-    .catch(err => {
+
+    } catch (err) {
         console.error(err);
-        let errorMessage = 'Could not connect to the OCR server. Please check your connection and API key.';
-        if (err.message === 'Request timed out') {
-            errorMessage = 'The server is taking too long to respond. Please try again.';
-        }
-        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>${errorMessage}</p></div>`;
-    })
-    .finally(() => {
+        resultsDiv.innerHTML = `<div class="result-box error"><h2>Scan Failed</h2><p>The text recognition engine failed to start. Please try again.</p></div>`;
+    } finally {
         scanButton.disabled = false;
         retakeButton.disabled = false;
         statusContainer.classList.add('hidden');
-    });
+    }
 });
+
 
 // --- 3. Pre-process the OCR text to fix broken words ---
 function preprocessOcrText(text) {
@@ -179,7 +181,6 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // --- UPDATED FUZZY MATCHING LOGIC ---
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
@@ -187,25 +188,19 @@ async function analyzeIngredients(text) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                 if (cleanedAlias.length < 3) continue;
 
-                // First, check for a direct, exact match (fastest)
                 if (searchableText.includes(cleanedAlias)) {
                     matches.set(alias.toLowerCase(), ingredient);
-                    continue; // Found it, move to the next alias
+                    continue; 
                 }
-
-                // If no direct match, try fuzzy matching with stricter rules
                 
-                // NEW: Stricter tolerance. Short words (len < 5) must be an exact match (tolerance 0).
-                // This prevents "beer" from matching "berr" in "cranberries".
                 const tolerance = cleanedAlias.length < 5 ? 0 : (cleanedAlias.length < 8 ? 1 : 2);
-                if (tolerance === 0) continue; // Already failed exact match above
+                if (tolerance === 0) continue; 
 
-                // Check all substrings of the searchable text
                 for (let i = 0; i <= searchableText.length - cleanedAlias.length; i++) {
                     const substring = searchableText.substring(i, i + cleanedAlias.length);
                     if (levenshtein(substring, cleanedAlias) <= tolerance) {
                         matches.set(alias.toLowerCase(), ingredient);
-                        break; // Found a fuzzy match, stop checking this alias
+                        break; 
                     }
                 }
             }
