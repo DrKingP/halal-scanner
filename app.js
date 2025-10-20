@@ -120,7 +120,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL, BULLETPROOF LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL DEFINITIVE LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -140,16 +140,31 @@ async function analyzeIngredients(text) {
     let foundHaram = {};
     let foundMushbooh = {};
     
-    // Step 1: Find all potential matches
+    // This function now correctly finds all matches
     const findMatches = (list, resultMap) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                 if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
-                    if (!resultMap[ingredient.name]) {
-                        resultMap[ingredient.name] = new Set();
+                    // Check if this specific alias is part of an exception phrase
+                    let isException = false;
+                    const exceptions = db.halal_exceptions[alias.toLowerCase()];
+                    if (exceptions) {
+                        for (const exceptionPhrase of exceptions) {
+                            const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
+                            if (searchableText.includes(cleanedException)) {
+                                isException = true;
+                                break; 
+                            }
+                        }
                     }
-                    resultMap[ingredient.name].add(alias);
+                    
+                    if (!isException) {
+                        if (!resultMap[ingredient.name]) {
+                            resultMap[ingredient.name] = new Set();
+                        }
+                        resultMap[ingredient.name].add(alias);
+                    }
                 }
             }
         });
@@ -158,35 +173,10 @@ async function analyzeIngredients(text) {
     findMatches(db.haram, foundHaram);
     findMatches(db.mushbooh, foundMushbooh);
     
-    // Step 2: Apply exceptions to the found Mushbooh items
-    const categoriesToDelete = [];
-    for (const category in foundMushbooh) {
-        const aliases = foundMushbooh[category];
-        const aliasesToRemove = new Set();
-        aliases.forEach(alias => {
-            const exceptions = db.halal_exceptions[alias.toLowerCase()];
-            if (exceptions) {
-                for (const exceptionPhrase of exceptions) {
-                    const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                    if (searchableText.includes(cleanedException)) {
-                        aliasesToRemove.add(alias);
-                        break; 
-                    }
-                }
-            }
-        });
-        aliasesToRemove.forEach(alias => aliases.delete(alias));
-        if (aliases.size === 0) {
-            categoriesToDelete.push(category);
-        }
-    }
-    categoriesToDelete.forEach(category => delete foundMushbooh[category]);
-    
     for (const category in foundHaram) {
         delete foundMushbooh[category];
     }
 
-    // Step 3: Generate the final HTML
     const generateListHtml = (resultMap) => {
         let listHtml = '';
         for (const category in resultMap) {
