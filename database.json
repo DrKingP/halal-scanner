@@ -28,7 +28,7 @@
   "halal_exceptions": {
     "emulsifier": ["emulsifier (derived from soy)", "emulsifier (from soy)", "emulsifier (soy)"],
     "乳化剤": ["乳化剤（大豆由来）"],
-    "fat": ["vegetable fat", "nonfat"],
+    "fat": ["vegetable fat"],
     "油脂": ["植物油脂"],
     "shortening": ["vegetable shortening"],
     "ショートニング": ["植物性ショートニング"],
