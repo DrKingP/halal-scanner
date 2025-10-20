@@ -137,47 +137,63 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    let foundHaram = {};
-    let foundMushbooh = {};
-    
-    // This is the final, corrected search function
-    const findMatches = (list, resultMap) => {
+    // STEP 1: Find all potential aliases that exist in the text
+    const findRawMatches = (list) => {
+        const matches = new Set();
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-
                 if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
-                    // Check for exceptions *before* adding the ingredient
-                    let isException = false;
-                    const exceptions = db.halal_exceptions[alias.toLowerCase()];
-                    if (exceptions) {
-                        for (const exceptionPhrase of exceptions) {
-                            const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                            if (searchableText.includes(cleanedException)) {
-                                isException = true;
-                                break; 
-                            }
-                        }
-                    }
-
-                    if (!isException) {
-                        if (!resultMap[ingredient.name]) {
-                            resultMap[ingredient.name] = new Set();
-                        }
-                        resultMap[ingredient.name].add(alias);
-                    }
+                    matches.add(alias.toLowerCase());
                 }
             }
         });
+        return matches;
     };
 
-    findMatches(db.haram, foundHaram);
-    findMatches(db.mushbooh, foundMushbooh);
-    
+    let haramMatches = findRawMatches(db.haram);
+    let mushboohMatches = findRawMatches(db.mushbooh);
+
+    // STEP 2: Filter out exceptions from the Mushbooh list
+    const exceptionsToRemove = new Set();
+    mushboohMatches.forEach(alias => {
+        const exceptions = db.halal_exceptions[alias];
+        if (exceptions) {
+            for (const exceptionPhrase of exceptions) {
+                const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
+                if (searchableText.includes(cleanedException)) {
+                    exceptionsToRemove.add(alias);
+                    break;
+                }
+            }
+        }
+    });
+    exceptionsToRemove.forEach(alias => mushboohMatches.delete(alias));
+
+    // STEP 3: Group the final, filtered aliases by their category for display
+    const groupResults = (matches, list) => {
+        const resultMap = {};
+        list.forEach(ingredient => {
+            for (const alias of ingredient.aliases) {
+                if (matches.has(alias.toLowerCase())) {
+                    if (!resultMap[ingredient.name]) {
+                        resultMap[ingredient.name] = new Set();
+                    }
+                    resultMap[ingredient.name].add(alias);
+                }
+            }
+        });
+        return resultMap;
+    };
+
+    let foundHaram = groupResults(haramMatches, db.haram);
+    let foundMushbooh = groupResults(mushboohMatches, db.mushbooh);
+
     for (const category in foundHaram) {
         delete foundMushbooh[category];
     }
 
+    // STEP 4: Generate the final HTML
     const generateListHtml = (resultMap) => {
         let listHtml = '';
         for (const category in resultMap) {
