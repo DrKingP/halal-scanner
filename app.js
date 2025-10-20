@@ -162,7 +162,7 @@ function levenshtein(s1, s2) {
     return costs[s2.length];
 }
 
-// --- 6. Analyze the Ingredients ---
+// --- 6. Analyze the Ingredients (with precise display logic) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -179,9 +179,7 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // --- LOGIC MODIFICATION STARTS HERE ---
-
-    // FindRawMatches will now return a Map of {found_alias: ingredient_object}
+    // findRawMatches now returns a Map of {found_alias: ingredient_object}
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
@@ -190,7 +188,7 @@ async function analyzeIngredients(text) {
                 if (cleanedAlias.length < 3) continue;
 
                 if (searchableText.includes(cleanedAlias)) {
-                    matches.set(alias, ingredient); // Store the original alias
+                    matches.set(alias, ingredient); // Store the original alias with correct casing
                     continue;
                 }
 
@@ -199,7 +197,7 @@ async function analyzeIngredients(text) {
                 for (let i = 0; i <= searchableText.length - cleanedAlias.length; i++) {
                     const substring = searchableText.substring(i, i + cleanedAlias.length + tolerance - 1);
                     if (levenshtein(substring, cleanedAlias) <= tolerance) {
-                        matches.set(alias, ingredient); // Store the original alias
+                        matches.set(alias, ingredient); // Store the original alias with correct casing
                         break;
                     }
                 }
@@ -214,21 +212,24 @@ async function analyzeIngredients(text) {
     // Exception logic now needs to work with the new map structure
     const exceptionsToRemove = new Set();
     mushboohMatchesMap.forEach((ingredient, foundAlias) => {
-        // We check for exceptions based on the alias that was found
-        const exceptions = db.halal_exceptions[foundAlias.toLowerCase()];
-        if (exceptions) {
-            for (const exceptionPhrase of exceptions) {
-                const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                if (searchableText.includes(cleanedException)) {
-                    exceptionsToRemove.add(foundAlias);
-                    break;
+        // We check for exceptions based on ALL possible aliases for the found ingredient, not just the one that was matched.
+        for (const aliasToCheck of ingredient.aliases) {
+             const exceptions = db.halal_exceptions[aliasToCheck.toLowerCase()];
+             if (exceptions) {
+                for (const exceptionPhrase of exceptions) {
+                    const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
+                    if (searchableText.includes(cleanedException)) {
+                        exceptionsToRemove.add(foundAlias);
+                        break; // Exit the inner loop
+                    }
                 }
-            }
+             }
+            if(exceptionsToRemove.has(foundAlias)) break; // Exit the outer loop
         }
     });
     exceptionsToRemove.forEach(alias => mushboohMatchesMap.delete(alias));
 
-    // GroupResults will now group the found aliases by ingredient name
+    // groupResults now groups the found aliases by ingredient name
     const groupResults = (matchesMap) => {
         const resultMap = {};
         matchesMap.forEach((ingredient, foundAlias) => {
@@ -239,8 +240,6 @@ async function analyzeIngredients(text) {
         });
         return resultMap;
     };
-    
-    // --- The rest of the function remains the same ---
 
     let foundHaram = groupResults(haramMatchesMap);
     let foundMushbooh = groupResults(mushboohMatchesMap);
