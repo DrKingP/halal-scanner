@@ -7,16 +7,16 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Halal Ingredient Scanner</h1>
-    <p>For best results, point your camera at a clear, <strong>printed</strong> ingredients list.</p>
+    <div class="app-header"> <h1>Halal Ingredient Scanner</h1>
+        <p>For best results, point your camera at a clear, <strong>printed</strong> ingredients list.</p>
+    </div>
     
     <div class="main-container">
         <div class="left-column">
             <div id="scanner-container">
                 <video id="video" autoplay playsinline></video>
                 <canvas id="canvas" class="hidden"></canvas>
-                <div id="scan-target-overlay" style="line-height: 250px;">Align Ingredients Here</div>
-            </div>
+                <div id="scan-target-overlay">Align Ingredients Here</div>             </div>
             
             <div id="status-container" class="hidden">
                 <p id="status-message">Initializing...</p>
@@ -34,19 +34,21 @@
         </div>
 
         <div class="right-column">
-                        <div id="initial-buttons">
-                <button id="captureButton">Capture Image</button>
-                <button id="uploadButton">Upload from Gallery</button>
-            </div>
-        </div>
+                    </div>
     </div>
     
     <input type="file" id="uploadInput" class="hidden" accept="image/*">
+
+    <div id="initial-buttons-wrapper"> 
+        <button id="captureButton">Capture Image</button>
+        <button id="uploadButton">Upload from Gallery</button>
+    </div>
 
     <div id="fixed-actions-footer" class="hidden">
         <button id="scanButton">Scan This Image</button>
         <button id="retakeButton">Start Over</button>
     </div>
-        <script src="app.js"></script>
+
+    <script src="app.js"></script>
 </body>
 </html>

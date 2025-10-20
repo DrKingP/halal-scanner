@@ -5,13 +5,13 @@ const resultsDiv = document.getElementById('results');
 const captureButton = document.getElementById('captureButton');
 const scanButton = document.getElementById('scanButton');
 const retakeButton = document.getElementById('retakeButton');
-const fixedActionsFooter = document.getElementById('fixed-actions-footer'); // NEW ELEMENT
+const fixedActionsFooter = document.getElementById('fixed-actions-footer'); 
 const context = canvas.getContext('2d');
 const statusContainer = document.getElementById('status-container');
 const statusMessage = document.getElementById('status-message');
 const progressBar = document.getElementById('progress-bar');
 const debugContainer = document.getElementById('debug-container');
-const initialButtons = document.getElementById('initial-buttons');
+const initialButtonsWrapper = document.getElementById('initial-buttons-wrapper'); // NEW ELEMENT ID
 const uploadButton = document.getElementById('uploadButton');
 const uploadInput = document.getElementById('uploadInput');
 const disclaimerText = document.getElementById('disclaimer-text');
@@ -45,8 +45,8 @@ navigator.mediaDevices.getUserMedia({
 function showScanUI() {
     video.classList.add('hidden');
     canvas.classList.remove('hidden');
-    initialButtons.classList.add('hidden');
-    fixedActionsFooter.classList.remove('hidden'); // SHOW NEW FIXED FOOTER
+    initialButtonsWrapper.classList.add('hidden'); // HIDE NEW WRAPPER
+    fixedActionsFooter.classList.remove('hidden'); // SHOW FIXED FOOTER
 }
 
 captureButton.addEventListener('click', () => {
@@ -88,8 +88,8 @@ uploadInput.addEventListener('change', (event) => {
 retakeButton.addEventListener('click', () => {
     canvas.classList.add('hidden');
     video.classList.remove('hidden');
-    fixedActionsFooter.classList.add('hidden'); // HIDE NEW FIXED FOOTER
-    initialButtons.classList.remove('hidden');
+    fixedActionsFooter.classList.add('hidden'); // HIDE FIXED FOOTER
+    initialButtonsWrapper.classList.remove('hidden'); // SHOW NEW WRAPPER
     resultsDiv.innerHTML = '';
     statusContainer.classList.add('hidden');
     debugContainer.classList.add('hidden'); 
