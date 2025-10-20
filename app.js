@@ -191,7 +191,7 @@ async function analyzeIngredients(text) {
         const specificTerms = [...foundMushbooh[category]].filter(t => t.length > 3);
         specificTerms.forEach(specific => {
             [...foundMushbooh[category]].forEach(general => {
-                if (specific !== general && specific.includes(general)) {
+                if (specific.toLowerCase() !== general.toLowerCase() && specific.toLowerCase().includes(general.toLowerCase())) {
                     foundMushbooh[category].delete(general);
                 }
             });
