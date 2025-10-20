@@ -179,7 +179,6 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // findRawMatches now returns a Map of {found_alias: ingredient_object}
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
@@ -188,7 +187,7 @@ async function analyzeIngredients(text) {
                 if (cleanedAlias.length < 3) continue;
 
                 if (searchableText.includes(cleanedAlias)) {
-                    matches.set(alias, ingredient); // Store the original alias with correct casing
+                    matches.set(alias, ingredient);
                     continue;
                 }
 
@@ -197,7 +196,7 @@ async function analyzeIngredients(text) {
                 for (let i = 0; i <= searchableText.length - cleanedAlias.length; i++) {
                     const substring = searchableText.substring(i, i + cleanedAlias.length + tolerance - 1);
                     if (levenshtein(substring, cleanedAlias) <= tolerance) {
-                        matches.set(alias, ingredient); // Store the original alias with correct casing
+                        matches.set(alias, ingredient);
                         break;
                     }
                 }
@@ -209,34 +208,33 @@ async function analyzeIngredients(text) {
     let haramMatchesMap = findRawMatches(db.haram);
     let mushboohMatchesMap = findRawMatches(db.mushbooh);
 
-    // Exception logic now needs to work with the new map structure
     const exceptionsToRemove = new Set();
-    mushboohMatchesMap.forEach((ingredient, foundAlias) => {
-        // We check for exceptions based on ALL possible aliases for the found ingredient, not just the one that was matched.
+    
+    // ** THE FIX IS HERE: Replaced forEach with a standard for...of loop **
+    for (const [foundAlias, ingredient] of mushboohMatchesMap.entries()) {
         for (const aliasToCheck of ingredient.aliases) {
-             const exceptions = db.halal_exceptions[aliasToCheck.toLowerCase()];
-             if (exceptions) {
+            const exceptions = db.halal_exceptions[aliasToCheck.toLowerCase()];
+            if (exceptions) {
                 for (const exceptionPhrase of exceptions) {
                     const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                     if (searchableText.includes(cleanedException)) {
                         exceptionsToRemove.add(foundAlias);
-                        break; // Exit the inner loop
+                        break; 
                     }
                 }
-             }
-            if(exceptionsToRemove.has(foundAlias)) break; // Exit the outer loop
+            }
+            if (exceptionsToRemove.has(foundAlias)) break;
         }
-    });
+    }
     exceptionsToRemove.forEach(alias => mushboohMatchesMap.delete(alias));
 
-    // groupResults now groups the found aliases by ingredient name
     const groupResults = (matchesMap) => {
         const resultMap = {};
         matchesMap.forEach((ingredient, foundAlias) => {
             if (!resultMap[ingredient.name]) {
                 resultMap[ingredient.name] = new Set();
             }
-            resultMap[ingredient.name].add(foundAlias); // Add the specific alias that was found
+            resultMap[ingredient.name].add(foundAlias);
         });
         return resultMap;
     };
