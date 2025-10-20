@@ -120,7 +120,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL DEFINITIVE LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL, BULLETPROOF LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -140,13 +140,14 @@ async function analyzeIngredients(text) {
     let foundHaram = {};
     let foundMushbooh = {};
     
-    // This function now correctly finds all matches
+    // This is the final, corrected search function
     const findMatches = (list, resultMap) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
+
                 if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
-                    // Check if this specific alias is part of an exception phrase
+                    // Check for exceptions *before* adding the ingredient
                     let isException = false;
                     const exceptions = db.halal_exceptions[alias.toLowerCase()];
                     if (exceptions) {
@@ -158,7 +159,7 @@ async function analyzeIngredients(text) {
                             }
                         }
                     }
-                    
+
                     if (!isException) {
                         if (!resultMap[ingredient.name]) {
                             resultMap[ingredient.name] = new Set();
