@@ -104,8 +104,8 @@ scanButton.addEventListener('click', () => {
         progressBar.style.width = '75%';
         const rawText = data.ParsedResults[0]?.ParsedText || 'No text recognized.';
         const processedText = preprocessOcrText(rawText);
-        const normalizedText = normalizeJapaneseText(processedText); // Normalization step added
-        analyzeIngredients(normalizedText); // Analyze the fully cleaned text
+        const normalizedText = normalizeJapaneseText(processedText);
+        analyzeIngredients(normalizedText);
     })
     .catch(err => {
         console.error(err);
@@ -132,7 +132,6 @@ function preprocessOcrText(text) {
 // --- 4. Normalize common Japanese OCR errors ---
 function normalizeJapaneseText(text) {
     if (!text) return '';
-    // Fixes cases where OCR reads small kana as large ones, e.g., しよう -> しょう
     return text.replace(/しよう/g, 'しょう')
                .replace(/しゆ/g, 'しゅ');
 }
@@ -154,12 +153,17 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
+    // --- UPDATED MATCHING LOGIC ---
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
+                if (cleanedAlias.length < 2) continue;
+                
+                // Use a regular expression to find the alias as a whole word or at the start of a word
+                const regex = new RegExp(`\\b${cleanedAlias}`, 'g');
+                if (searchableText.match(regex)) {
                     matches.set(alias.toLowerCase(), ingredient);
                 }
             }
