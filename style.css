@@ -55,7 +55,7 @@ h1 {
     border-radius: 8px;
     overflow: hidden;
     /* FIX: Max-height is 300px and fixed aspect ratio */
-    max-height: 300px; 
+    max-height: 200px; 
     aspect-ratio: 1 / 1; 
 }
 
