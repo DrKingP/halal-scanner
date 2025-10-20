@@ -15,8 +15,6 @@ const initialButtons = document.getElementById('initial-buttons');
 const uploadButton = document.getElementById('uploadButton');
 const uploadInput = document.getElementById('uploadInput');
 
-// --- API Key is no longer needed ---
-
 // --- 1. Start the Camera ---
 navigator.mediaDevices.getUserMedia({ 
     video: { facingMode: 'environment' } 
@@ -186,7 +184,10 @@ async function analyzeIngredients(text) {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                if (cleanedAlias.length < 3) continue;
+                if (cleanedAlias.length < 2) continue; // Changed to 2 to catch things like 牛
+
+                // ADD THIS LINE FOR DEBUGGING
+                console.log(`Checking for alias: '${cleanedAlias}'`);
 
                 if (searchableText.includes(cleanedAlias)) {
                     matches.set(alias.toLowerCase(), ingredient);
