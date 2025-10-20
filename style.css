@@ -1,16 +1,10 @@
-/* Ensure padding/border don't cause horizontal overflow */
-* {
-    box-sizing: border-box;
-}
-
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: #f0f0f0;
     color: #333;
     text-align: center;
     margin: 0;
-    /* Added padding at bottom to clear the fixed button bar */
-    padding: 20px 20px 120px 20px; 
+    padding: 20px;
 }
 
 h1 {
@@ -27,19 +21,14 @@ h1 {
     margin: 20px auto;
 }
 
-.left-column {
-    /* On large screens, left column takes primary space */
-    flex: 2;
+.left-column, .right-column {
+    flex: 1; 
     min-width: 300px; 
     padding: 15px;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
-/* New: Remove right-column styling as buttons are now fixed at the bottom on mobile */
-/* On desktop, the buttons will be inside the fixed bar, but that's a secondary concern */
-
 
 #scanner-container {
     position: relative;
@@ -49,7 +38,6 @@ h1 {
     overflow: hidden;
 }
 
-/* FIX: Allow height to be determined by the content/aspect ratio, preventing excessive height */
 #video, #canvas {
     width: 100%;
     height: auto; 
@@ -57,61 +45,38 @@ h1 {
     display: block;
 }
 
-/* --- New: Scanning Guidance Overlay --- */
 #scan-target-overlay {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 10%;
+    left: 10%;
     width: 80%;
     height: 80%;
     border: 2px dashed rgba(255, 255, 255, 0.8);
-    background-color: rgba(0, 0, 0, 0.1); /* Slight darkening for contrast */
     pointer-events: none;
     z-index: 10;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: bold;
     color: white;
+    text-align: center;
+    line-height: 250px;
+    font-size: 1.2em;
+    font-weight: bold;
     text-shadow: 0 0 5px black;
 }
 
-/* --- New: Fixed Mobile Action Bar --- */
-#mobile-action-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 15px 20px;
-    background-color: white;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    z-index: 100;
-}
-#initial-buttons, #actions-container {
-    display: flex;
-    gap: 10px;
-}
-#actions-container.hidden { display: none !important; }
-
-/* Buttons inside the fixed bar */
 #captureButton, #uploadButton, #scanButton, #retakeButton {
-    flex: 1; /* Ensures buttons share width equally */
-    width: auto; /* Override 100% width from previous style */
-    padding: 18px 10px;
-    font-size: 17px;
+    display: block;
+    width: 100%;
+    padding: 20px 10px;
+    font-size: 18px;
     font-weight: bold;
+    color: white;
     border: none;
     border-radius: 8px;
-    margin: 0; /* Remove margin inside the fixed container */
+    margin: 10px 0;
     cursor: pointer;
     box-sizing: border-box;
-    color: white;
 }
 
-#captureButton, #scanButton { background-color: #4CAF50; } /* Slightly different green for contrast */
+#captureButton, #scanButton { background-color: #28a745; }
 #captureButton:active, #scanButton:active { background-color: #218838; }
 
 #uploadButton { background-color: #007bff; }
@@ -122,18 +87,60 @@ h1 {
 
 .hidden { display: none !important; }
 
-/* Result and Debug styling (moved down by fixed bar) */
 #results { width: 100%; text-align: left; }
 .result-box { padding: 15px; border-radius: 8px; margin-top: 20px; }
-/* ... (remaining result styles omitted for brevity, assume they are correct) */
+.result-box h2 { margin-top: 0; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 10px; }
+.result-box h3 { margin-bottom: 5px; }
+.ingredient-list { font-weight: bold; word-wrap: break-word; }
+.haram { background-color: #ffdddd; border: 1px solid #d8000c; }
+.mushbooh { background-color: #fffbdd; border: 1px solid #9f6000; }
+.halal { background-color: #ddffdd; border: 1px solid #4f8a10; }
+.error { background-color: #ffdddd; border: 1px solid #d8000c; }
+
+#status-container { margin-top: 20px; }
+.progress-bar-container { width: 100%; background-color: #ccc; border-radius: 5px; height: 12px; }
+#progress-bar { width: 0%; height: 100%; background-color: #28a745; border-radius: 5px; transition: width 0.2s ease-in-out; }
+#status-message { margin: 0 0 10px 0; font-weight: bold; text-transform: capitalize; text-align: left; }
+
+#debug-container {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-family: monospace;
+    text-align: left;
+}
+#debug-container h3 {
+    margin-top: 0;
+    font-size: 14px;
+    color: #6c757d;
+}
+#debug-container pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: #212529;
+}
+
+.disclaimer { 
+    font-size: 12px; 
+    color: #6c757d; 
+    margin-top: 15px; 
+    text-align: center;
+    padding: 5px 0;
+    border-top: 1px solid #ccc;
+}
 
 /* Media query for mobile devices */
 @media (max-width: 600px) {
     /* Ensure columns stack vertically on mobile */
-    .left-column {
+    .left-column, .right-column {
         flex: 1 1 100%; 
     }
-    .right-column {
-        display: none; /* Hide the empty right column completely on mobile */
+
+    /* CRITICAL FIX: Limit the vertical size of the camera/canvas window */
+    #scanner-container {
+        max-height: 400px; 
+        aspect-ratio: 1 / 1; 
     }
 }

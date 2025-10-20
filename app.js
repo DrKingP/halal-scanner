@@ -15,6 +15,7 @@ const initialButtons = document.getElementById('initial-buttons');
 const uploadButton = document.getElementById('uploadButton');
 const uploadInput = document.getElementById('uploadInput');
 const disclaimerText = document.getElementById('disclaimer-text');
+const scanTargetOverlay = document.getElementById('scan-target-overlay'); // New element
 
 // --- YOUR API KEY IS INCLUDED HERE ---
 const API_KEY = 'K89442506988957'; 
@@ -24,11 +25,10 @@ function convertToGrayscale(context, canvas) {
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
-        // Luminosity method for better grayscale conversion
         const avg = 0.21 * data[i] + 0.72 * data[i + 1] + 0.07 * data[i + 2];
-        data[i] = avg;     // Red
-        data[i + 1] = avg; // Green
-        data[i + 2] = avg; // Blue
+        data[i] = avg;
+        data[i + 1] = avg;
+        data[i + 2] = avg;
     }
     context.putImageData(imageData, 0, 0);
 }
@@ -48,6 +48,7 @@ function showScanUI() {
     canvas.classList.remove('hidden');
     initialButtons.classList.add('hidden');
     actionsContainer.classList.remove('hidden');
+    scanTargetOverlay.classList.add('hidden'); // Hide guidance overlay after capture
 }
 
 captureButton.addEventListener('click', () => {
@@ -95,13 +96,14 @@ retakeButton.addEventListener('click', () => {
     statusContainer.classList.add('hidden');
     debugContainer.classList.add('hidden'); 
     disclaimerText.classList.add('hidden');
+    scanTargetOverlay.classList.remove('hidden'); // Show overlay when retaking
 });
 
 scanButton.addEventListener('click', () => {
     scanButton.disabled = true;
     retakeButton.disabled = true;
     resultsDiv.innerHTML = '';
-    debugContainer.classList.add('hidden');
+    debugContainer.classList.add('hidden'); // Ensure debug is hidden at start
     disclaimerText.classList.add('hidden');
     statusContainer.classList.remove('hidden');
     
@@ -147,11 +149,14 @@ scanButton.addEventListener('click', () => {
 
 // --- 3. Analyze the Ingredients (FINAL, BULLETPROOF TWO-PASS LOGIC) ---
 async function analyzeIngredients(text) {
-    debugContainer.classList.remove('hidden');
+    // debugContainer.classList.remove('hidden'); // **Hiding this for cleaner UX**
+    
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
     disclaimerText.classList.remove('hidden');
 
-    const qualityCheck = (text.match(/[^a-zA-Z0-9\s\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF]/g) || []).length;
+    // ... (rest of the logic remains the same)
+    
+    const qualityCheck = (text.match(/[^a-zA-Z0-9\s\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF]/g) || []).length;
     if ((text.length > 0 && qualityCheck / text.length > 0.4) || text.trim() === '') {
         resultsDiv.innerHTML = `<div class="result-box error"><h2>Poor Scan Quality</h2><p>The text could not be read clearly. Please try again with a better lit, non-reflective, and focused photo.</p></div>`;
         resultsDiv.scrollIntoView({ behavior: 'smooth' });
