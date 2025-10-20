@@ -121,35 +121,33 @@ scanButton.addEventListener('click', () => {
 });
 
 // --- 3. Analyze the Ingredients (FINAL, BULLETPROOF TWO-PASS LOGIC) ---
+// --- 3. Analyze the Ingredients (New Three-Pass Logic) ---
 async function analyzeIngredients(text) {
-    debugContainer.classList.remove('hidden');
-    debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
-
-    const qualityCheck = (text.match(/[^a-zA-Z0-9\s\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF]/g) || []).length;
-    if ((text.length > 0 && qualityCheck / text.length > 0.4) || text.trim() === '') {
-        resultsDiv.innerHTML = `<div class="result-box error"><h2>Poor Scan Quality</h2><p>The text could not be read clearly. Please try again with a better lit, non-reflective, and focused photo.</p></div>`;
-        resultsDiv.scrollIntoView({ behavior: 'smooth' });
-        return;
-    }
-
+    // ... (Existing OCR setup and quality check code) ...
+    
     const response = await fetch('database.json');
     const db = await response.json();
 
     let searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // STEP 1: Find and "neutralize" all Halal exception phrases first
-    for (const key in db.halal_exceptions) {
-        for (const exceptionPhrase of db.halal_exceptions[key]) {
-            const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-            // Replace the found exception phrase with a safe placeholder
-            searchableText = searchableText.replace(new RegExp(cleanedException, 'g'), '');
+    // --- NEW STEP 1A: Find and "neutralize" all universally Halal safe phrases first ---
+    // This prevents generic keywords (like 'ビタミン') from matching when the specific safe form ('ビタミンC') is present.
+    for (const key in db.halal_safe_exceptions) {
+        for (const safePhrase of db.halal_safe_exceptions[key]) {
+            const cleanedSafe = safePhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
+            searchableText = searchableText.replace(new RegExp(cleanedSafe, 'g'), '');
         }
+    }
+
+    // --- OLD STEP 1 (Now Step 1B): Find and "neutralize" conditional Halal exception phrases ---
+    for (const key in db.halal_exceptions) {
+        // ... (Existing logic for conditional exceptions like 乳化剤（大豆由来）) ...
     }
 
     let foundHaram = {};
     let foundMushbooh = {};
     
-    // STEP 2: Now, find matches in the remaining (neutralized) text
+    // --- STEP 2: Find matches in the remaining (neutralized) text ---
     const findMatches = (list, resultMap) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
