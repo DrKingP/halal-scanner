@@ -89,21 +89,14 @@ scanButton.addEventListener('click', () => {
     statusContainer.classList.remove('hidden');
     statusMessage.textContent = 'Uploading image...';
     progressBar.style.width = '25%';
-    
-    // CHANGE 1: Compress the image to 85% quality to reduce file size
-    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85); 
-
+    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
     const formData = new FormData();
     formData.append('apikey', API_KEY);
     formData.append('base64Image', imageDataUrl);
     formData.append('language', 'jpn');
     formData.append('isOverlayRequired', false);
-    
-    // CHANGE 2: Increase the timeout from 20 to 30 seconds (30000ms)
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 30000)); 
-
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 30000));
     const fetchPromise = fetch('https://api.ocr.space/parse/image', { method: 'POST', body: formData });
-    
     Promise.race([fetchPromise, timeoutPromise])
     .then(response => response.json())
     .then(data => {
@@ -111,7 +104,8 @@ scanButton.addEventListener('click', () => {
         progressBar.style.width = '75%';
         const rawText = data.ParsedResults[0]?.ParsedText || 'No text recognized.';
         const processedText = preprocessOcrText(rawText);
-        analyzeIngredients(processedText);
+        const normalizedText = normalizeJapaneseText(processedText); // Normalization step added
+        analyzeIngredients(normalizedText); // Analyze the fully cleaned text
     })
     .catch(err => {
         console.error(err);
@@ -131,14 +125,19 @@ scanButton.addEventListener('click', () => {
 // --- 3. Pre-process the OCR text to fix broken words ---
 function preprocessOcrText(text) {
     if (!text) return '';
-    // This regex looks for a letter (Japanese or English) followed by a newline, 
-    // and then another letter. It removes the newline between them.
     const regex = /([a-zA-Z\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF])\n([a-zA-Z\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF])/g;
-    // For example: "しょ\nうゆ" becomes "しょうゆ"
     return text.replace(regex, '$1$2');
 }
 
-// --- 4. Analyze the Ingredients ---
+// --- 4. Normalize common Japanese OCR errors ---
+function normalizeJapaneseText(text) {
+    if (!text) return '';
+    // Fixes cases where OCR reads small kana as large ones, e.g., しよう -> しょう
+    return text.replace(/しよう/g, 'しょう')
+               .replace(/しゆ/g, 'しゅ');
+}
+
+// --- 5. Analyze the Ingredients ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -155,7 +154,6 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // STEP 1: Find all potential aliases that exist in the text (Simplified Logic)
     const findRawMatches = (list) => {
         const matches = new Map();
         list.forEach(ingredient => {
@@ -172,7 +170,6 @@ async function analyzeIngredients(text) {
     let haramMatchesMap = findRawMatches(db.haram);
     let mushboohMatchesMap = findRawMatches(db.mushbooh);
 
-    // STEP 2: Filter out exceptions from the Mushbooh list
     const exceptionsToRemove = new Set();
     mushboohMatchesMap.forEach((ingredient, alias) => {
         const exceptions = db.halal_exceptions[alias];
@@ -188,7 +185,6 @@ async function analyzeIngredients(text) {
     });
     exceptionsToRemove.forEach(alias => mushboohMatchesMap.delete(alias));
 
-    // STEP 3: Group the final, filtered aliases by their category
     const groupResults = (matchesMap) => {
         const resultMap = {};
         matchesMap.forEach((ingredient, alias) => {
@@ -204,7 +200,6 @@ async function analyzeIngredients(text) {
     let foundHaram = groupResults(haramMatchesMap);
     let foundMushbooh = groupResults(mushboohMatchesMap);
 
-    // STEP 4: Remove redundancies (e.g., if 'vitamin c' is found, remove 'vitamin')
     const cleanRedundancies = (resultMap) => {
         for (const category in resultMap) {
             const aliases = [...resultMap[category]];
@@ -227,7 +222,6 @@ async function analyzeIngredients(text) {
         delete foundMushbooh[category];
     }
 
-    // STEP 5: Generate the final HTML
     const generateListHtml = (resultMap) => {
         let listHtml = '';
         for (const category in resultMap) {
