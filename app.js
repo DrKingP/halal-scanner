@@ -221,4 +221,3 @@ async function analyzeIngredients(text) {
     resultsDiv.innerHTML = html;
     resultsDiv.scrollIntoView({ behavior: 'smooth' });
 }
-
