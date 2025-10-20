@@ -120,7 +120,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL DEFINITIVE LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL, BULLETPROOF LOGIC) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -140,7 +140,7 @@ async function analyzeIngredients(text) {
     let foundHaram = {};
     let foundMushbooh = {};
     
-    // Step 1: Find all potential matches first
+    // Step 1: Find all potential matches
     const findMatches = (list, resultMap) => {
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
@@ -158,38 +158,35 @@ async function analyzeIngredients(text) {
     findMatches(db.haram, foundHaram);
     findMatches(db.mushbooh, foundMushbooh);
     
-    // Step 2: Apply exceptions to the found items
-    const applyExceptions = (resultMap) => {
-        const categoriesToDelete = [];
-        for (const category in resultMap) {
-            const aliases = resultMap[category];
-            const aliasesToRemove = new Set();
-            aliases.forEach(alias => {
-                const exceptions = db.halal_exceptions[alias.toLowerCase()];
-                if (exceptions) {
-                    for (const exceptionPhrase of exceptions) {
-                        const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                        if (searchableText.includes(cleanedException)) {
-                            aliasesToRemove.add(alias);
-                            break; 
-                        }
+    // Step 2: Apply exceptions to the found Mushbooh items
+    const categoriesToDelete = [];
+    for (const category in foundMushbooh) {
+        const aliases = foundMushbooh[category];
+        const aliasesToRemove = new Set();
+        aliases.forEach(alias => {
+            const exceptions = db.halal_exceptions[alias.toLowerCase()];
+            if (exceptions) {
+                for (const exceptionPhrase of exceptions) {
+                    const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
+                    if (searchableText.includes(cleanedException)) {
+                        aliasesToRemove.add(alias);
+                        break; 
                     }
                 }
-            });
-            aliasesToRemove.forEach(alias => aliases.delete(alias));
-            if (aliases.size === 0) {
-                categoriesToDelete.push(category);
             }
+        });
+        aliasesToRemove.forEach(alias => aliases.delete(alias));
+        if (aliases.size === 0) {
+            categoriesToDelete.push(category);
         }
-        categoriesToDelete.forEach(category => delete resultMap[category]);
-    };
-
-    applyExceptions(foundMushbooh);
+    }
+    categoriesToDelete.forEach(category => delete foundMushbooh[category]);
     
     for (const category in foundHaram) {
         delete foundMushbooh[category];
     }
 
+    // Step 3: Generate the final HTML
     const generateListHtml = (resultMap) => {
         let listHtml = '';
         for (const category in resultMap) {
