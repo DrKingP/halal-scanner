@@ -186,6 +186,18 @@ async function analyzeIngredients(text) {
     let foundHaram = groupResults(haramMatchesMap);
     let foundMushbooh = groupResults(mushboohMatchesMap);
 
+    // FINAL REDUNDANCY FIX: If a specific term is found, remove its general parent from the same category
+    for (const category in foundMushbooh) {
+        const specificTerms = [...foundMushbooh[category]].filter(t => t.length > 3);
+        specificTerms.forEach(specific => {
+            [...foundMushbooh[category]].forEach(general => {
+                if (specific !== general && specific.includes(general)) {
+                    foundMushbooh[category].delete(general);
+                }
+            });
+        });
+    }
+
     for (const category in foundHaram) {
         delete foundMushbooh[category];
     }
