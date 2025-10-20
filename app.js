@@ -120,7 +120,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL LOGIC WITH EXCLUSIONS) ---
+// --- 3. Analyze the Ingredients (FINAL LOGIC WITH CORRECTED EXCLUSIONS) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -145,10 +145,25 @@ async function analyzeIngredients(text) {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
                 if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
-                    if (!resultMap[ingredient.name]) {
-                        resultMap[ingredient.name] = new Set();
+                    // Check for exceptions before adding
+                    let isException = false;
+                    const exceptions = db.halal_exceptions[cleanedAlias];
+                    if (exceptions) {
+                        for (const exceptionPhrase of exceptions) {
+                            const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
+                            if (searchableText.includes(cleanedException)) {
+                                isException = true;
+                                break;
+                            }
+                        }
                     }
-                    resultMap[ingredient.name].add(alias);
+
+                    if (!isException) {
+                        if (!resultMap[ingredient.name]) {
+                            resultMap[ingredient.name] = new Set();
+                        }
+                        resultMap[ingredient.name].add(alias);
+                    }
                 }
             }
         });
@@ -157,27 +172,6 @@ async function analyzeIngredients(text) {
     findMatches(db.haram, foundHaram);
     findMatches(db.mushbooh, foundMushbooh);
     
-    // --- NEW EXCLUSION LOGIC ---
-    for (const category in foundMushbooh) {
-        let aliasesToRemove = new Set();
-        foundMushbooh[category].forEach(alias => {
-            if (db.halal_exceptions[alias.toLowerCase()]) {
-                for (const exceptionPhrase of db.halal_exceptions[alias.toLowerCase()]) {
-                    const cleanedException = exceptionPhrase.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                    if (searchableText.includes(cleanedException)) {
-                        aliasesToRemove.add(alias);
-                        break; 
-                    }
-                }
-            }
-        });
-        aliasesToRemove.forEach(alias => foundMushbooh[category].delete(alias));
-        if (foundMushbooh[category].size === 0) {
-            delete foundMushbooh[category];
-        }
-    }
-    // --- END EXCLUSION LOGIC ---
-
     for (const category in foundHaram) {
         delete foundMushbooh[category];
     }
