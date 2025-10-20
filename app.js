@@ -45,8 +45,8 @@ navigator.mediaDevices.getUserMedia({
 function showScanUI() {
     video.classList.add('hidden');
     canvas.classList.remove('hidden');
-    initialButtonsWrapper.classList.add('hidden'); // HIDE NEW WRAPPER
-    fixedActionsFooter.classList.remove('hidden'); // SHOW FIXED FOOTER
+    initialButtonsWrapper.classList.add('hidden'); // HIDE CAPTURE/UPLOAD BUTTONS
+    fixedActionsFooter.classList.remove('hidden'); // SHOW SCAN/RETAKE BUTTONS
 }
 
 captureButton.addEventListener('click', () => {
@@ -88,8 +88,8 @@ uploadInput.addEventListener('change', (event) => {
 retakeButton.addEventListener('click', () => {
     canvas.classList.add('hidden');
     video.classList.remove('hidden');
-    fixedActionsFooter.classList.add('hidden'); // HIDE FIXED FOOTER
-    initialButtonsWrapper.classList.remove('hidden'); // SHOW NEW WRAPPER
+    fixedActionsFooter.classList.add('hidden'); // HIDE SCAN/RETAKE BUTTONS
+    initialButtonsWrapper.classList.remove('hidden'); // SHOW CAPTURE/UPLOAD BUTTONS
     resultsDiv.innerHTML = '';
     statusContainer.classList.add('hidden');
     debugContainer.classList.add('hidden'); 
