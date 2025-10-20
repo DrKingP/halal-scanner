@@ -10,7 +10,7 @@
     { "name": "Shellac (E904)", "aliases": ["shellac", "glaze", "e904", "セラック"] }
   ],
   "mushbooh": [
-    { "name": "Shortening / Fats of unknown origin", "aliases": ["shortening", "fat", "fat spread", "油脂", "ファットスプレッド", "ショートニング"] },
+    { "name": "Shortening / Fats of unknown origin", "aliases": ["shortening", "fat", "fat spread", "油脂", "ファットスプレッド", "ショートニング", "ショートニン"] },
     { "name": "Emulsifiers (e.g., Mono/Diglycerides)", "aliases": ["emulsifier", "diglyceride", "mono and diglycerides", "monoglyceride", "e471", "e472", "e477", "乳化剤", "ジグリセリド", "モノグリセリド"] },
     { "name": "Whey", "aliases": ["whey", "whey protein concentrate", "reduced mineral whey", "ホエイ", "ホエイプロテインコンセントレート", "還元ホエイ"] },
     { "name": "Rennet / Renin", "aliases": ["rennet", "rennin", "レンネット", "レンニン"] },
