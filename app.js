@@ -120,7 +120,7 @@ scanButton.addEventListener('click', () => {
     });
 });
 
-// --- 3. Analyze the Ingredients (FINAL, BULLETPROOF TWO-PASS LOGIC) ---
+// --- 3. Analyze the Ingredients (FINAL, BULLETPROOF LOGIC WITH PARTIAL MATCHING) ---
 async function analyzeIngredients(text) {
     debugContainer.classList.remove('hidden');
     debugContainer.innerHTML = `<h3>Raw Text Recognized:</h3><pre>${text || 'No text recognized'}</pre>`;
@@ -137,14 +137,24 @@ async function analyzeIngredients(text) {
 
     const searchableText = text.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
 
-    // STEP 1: Find all potential aliases that exist in the text, regardless of exceptions
+    // STEP 1: Find all potential aliases that exist in the text, including partial matches
     const findRawMatches = (list) => {
-        const matches = new Map(); // Using a Map to store { alias -> ingredient object }
+        const matches = new Map();
         list.forEach(ingredient => {
             for (const alias of ingredient.aliases) {
                 const cleanedAlias = alias.toLowerCase().replace(/[\s.,()（）\[\]{}・「」、。]/g, '');
-                if (cleanedAlias.length > 1 && searchableText.includes(cleanedAlias)) {
+                if (cleanedAlias.length < 3) continue;
+
+                // Check for a full match first (most reliable)
+                if (searchableText.includes(cleanedAlias)) {
                     matches.set(alias.toLowerCase(), ingredient);
+                    continue;
+                }
+                
+                // If no full match, check for reliable partial matches
+                // Does the searchable text contain a word that STARTS WITH a long alias?
+                if (cleanedAlias.length >= 4 && searchableText.includes(cleanedAlias.substring(0, cleanedAlias.length - 1))) {
+                     matches.set(alias.toLowerCase(), ingredient);
                 }
             }
         });
@@ -170,7 +180,7 @@ async function analyzeIngredients(text) {
     });
     exceptionsToRemove.forEach(alias => mushboohMatchesMap.delete(alias));
 
-    // STEP 3: Group the final, filtered aliases by their category for display
+    // STEP 3: Group the final, filtered aliases by their category
     const groupResults = (matchesMap) => {
         const resultMap = {};
         matchesMap.forEach((ingredient, alias) => {
@@ -186,7 +196,7 @@ async function analyzeIngredients(text) {
     let foundHaram = groupResults(haramMatchesMap);
     let foundMushbooh = groupResults(mushboohMatchesMap);
 
-    // Clean up redundancies (e.g., if "vitamin c" is found, remove "vitamin")
+    // STEP 4: Remove redundancies (e.g., if 'vitamin c' is found, remove 'vitamin')
     const cleanRedundancies = (resultMap) => {
         for (const category in resultMap) {
             const aliases = [...resultMap[category]];
@@ -209,7 +219,7 @@ async function analyzeIngredients(text) {
         delete foundMushbooh[category];
     }
 
-    // STEP 4: Generate the final HTML
+    // STEP 5: Generate the final HTML
     const generateListHtml = (resultMap) => {
         let listHtml = '';
         for (const category in resultMap) {
