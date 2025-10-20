@@ -187,16 +187,23 @@ async function analyzeIngredients(text) {
     let foundMushbooh = groupResults(mushboohMatchesMap);
 
     // FINAL REDUNDANCY FIX: If a specific term is found, remove its general parent from the same category
-    for (const category in foundMushbooh) {
-        const specificTerms = [...foundMushbooh[category]].filter(t => t.length > 3); // A simple heuristic
-        specificTerms.forEach(specific => {
-            [...foundMushbooh[category]].forEach(general => {
-                if (specific.toLowerCase() !== general.toLowerCase() && specific.toLowerCase().includes(general.toLowerCase())) {
-                    foundMushbooh[category].delete(general);
+    const cleanRedundancies = (resultMap) => {
+        for (const category in resultMap) {
+            const aliases = [...resultMap[category]];
+            const toRemove = new Set();
+            for (const specific of aliases) {
+                for (const general of aliases) {
+                    if (specific !== general && specific.toLowerCase().includes(general.toLowerCase())) {
+                        toRemove.add(general);
+                    }
                 }
-            });
-        });
-    }
+            }
+            toRemove.forEach(item => resultMap[category].delete(item));
+        }
+    };
+
+    cleanRedundancies(foundHaram);
+    cleanRedundancies(foundMushbooh);
 
     for (const category in foundHaram) {
         delete foundMushbooh[category];
