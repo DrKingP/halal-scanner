@@ -15,32 +15,38 @@
             <div id="scanner-container">
                 <video id="video" autoplay playsinline></video>
                 <canvas id="canvas" class="hidden"></canvas>
+                <div id="scan-target-overlay" style="line-height: 250px;">Align Ingredients Here</div>
             </div>
+            
             <div id="status-container" class="hidden">
                 <p id="status-message">Initializing...</p>
                 <div class="progress-bar-container">
                     <div id="progress-bar"></div>
                 </div>
             </div>
+            
             <div id="results"></div>
+            
             <p class="disclaimer hidden" id="disclaimer-text">Disclaimer: This result is based on a database and automated OCR analysis. Always check for official Halal certification marks on the packaging.</p>
+            
             <div id="debug-container" class="hidden"></div>
+            
         </div>
-            </div>
-    
-    <div id="fixed-actions-wrapper"> 
-        <div id="initial-buttons">
-            <button id="captureButton">Capture Image</button>
-            <button id="uploadButton">Upload from Gallery</button>
+
+        <div class="right-column">
+                        <div id="initial-buttons">
+                <button id="captureButton">Capture Image</button>
+                <button id="uploadButton">Upload from Gallery</button>
+            </div>
         </div>
-        <div id="actions-container" class="hidden">
-            <button id="scanButton">Scan This Image</button>
-            <button id="retakeButton">Start Over</button>
-        </div>
-    </div>
-    
+    </div>
+    
     <input type="file" id="uploadInput" class="hidden" accept="image/*">
 
-    <script src="app.js"></script>
+    <div id="fixed-actions-footer" class="hidden">
+        <button id="scanButton">Scan This Image</button>
+        <button id="retakeButton">Start Over</button>
+    </div>
+        <script src="app.js"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@ const resultsDiv = document.getElementById('results');
 const captureButton = document.getElementById('captureButton');
 const scanButton = document.getElementById('scanButton');
 const retakeButton = document.getElementById('retakeButton');
-const actionsContainer = document.getElementById('actions-container');
+const fixedActionsFooter = document.getElementById('fixed-actions-footer'); // NEW ELEMENT
 const context = canvas.getContext('2d');
 const statusContainer = document.getElementById('status-container');
 const statusMessage = document.getElementById('status-message');
@@ -24,11 +24,10 @@ function convertToGrayscale(context, canvas) {
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
-        // Luminosity method for better grayscale conversion
         const avg = 0.21 * data[i] + 0.72 * data[i + 1] + 0.07 * data[i + 2];
-        data[i] = avg;     // Red
-        data[i + 1] = avg; // Green
-        data[i + 2] = avg; // Blue
+        data[i] = avg;
+        data[i + 1] = avg;
+        data[i + 2] = avg;
     }
     context.putImageData(imageData, 0, 0);
 }
@@ -47,7 +46,7 @@ function showScanUI() {
     video.classList.add('hidden');
     canvas.classList.remove('hidden');
     initialButtons.classList.add('hidden');
-    actionsContainer.classList.remove('hidden');
+    fixedActionsFooter.classList.remove('hidden'); // SHOW NEW FIXED FOOTER
 }
 
 captureButton.addEventListener('click', () => {
@@ -89,7 +88,7 @@ uploadInput.addEventListener('change', (event) => {
 retakeButton.addEventListener('click', () => {
     canvas.classList.add('hidden');
     video.classList.remove('hidden');
-    actionsContainer.classList.add('hidden');
+    fixedActionsFooter.classList.add('hidden'); // HIDE NEW FIXED FOOTER
     initialButtons.classList.remove('hidden');
     resultsDiv.innerHTML = '';
     statusContainer.classList.add('hidden');
@@ -115,7 +114,7 @@ scanButton.addEventListener('click', () => {
     const formData = new FormData();
     formData.append('apikey', API_KEY);
     formData.append('base64Image', imageDataUrl);
-    formData.append('language', 'jpn'); // RESTORED TO SINGLE LANGUAGE FOR STABILITY
+    formData.append('language', 'jpn');
     formData.append('isOverlayRequired', false);
     
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 20000));
@@ -224,9 +223,9 @@ async function analyzeIngredients(text) {
 
     if (html === '') {
         html = `<div class="result-box halal"><h2>✅ Halal</h2><p>Based on our database, no Haram or Doubtful ingredients were detected.</p></div>`;
-    } // <--- FIX: The result box generation is complete
+    } 
 
-    resultsDiv.innerHTML = html; // FIX: This line displays the result
+    resultsDiv.innerHTML = html;
     resultsDiv.scrollIntoView({ behavior: 'smooth' });
     progressBar.style.width = '100%'; 
-} // <--- FIX: The missing closing brace
+}
