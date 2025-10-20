@@ -11,7 +11,7 @@ body {
 
 /* FIX: Reduce top spacing and consolidate header elements */
 .app-header {
-    padding: 10px 20px 5px 20px; /* Reduced padding */
+    padding: 5px 5px 5px 5px; /* Reduced padding */
     margin-bottom: 5px;
 }
 
